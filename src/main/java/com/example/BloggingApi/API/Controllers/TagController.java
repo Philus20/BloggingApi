@@ -9,6 +9,7 @@ import com.example.BloggingApi.Application.Commands.DeleteCommands.DeleteTag;
 import com.example.BloggingApi.Application.Commands.EditCommands.EditTag;
 import com.example.BloggingApi.Application.Queries.GetAllTags;
 import com.example.BloggingApi.Application.Queries.GetTagById;
+import com.example.BloggingApi.Application.Queries.SearchTags;
 import com.example.BloggingApi.Domain.Entities.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,23 +25,21 @@ public class TagController {
     private final DeleteTag deleteTagHandler;
     private final GetTagById getTagByIdHandler;
     private final GetAllTags getAllTagsHandler;
+    private final SearchTags searchTagsHandler;
 
-    public TagController(CreateTag createTagHandler, EditTag editTagHandler, DeleteTag deleteTagHandler, GetTagById getTagByIdHandler, GetAllTags getAllTagsHandler) {
+    public TagController(CreateTag createTagHandler, EditTag editTagHandler, DeleteTag deleteTagHandler, GetTagById getTagByIdHandler, GetAllTags getAllTagsHandler, SearchTags searchTagsHandler) {
         this.createTagHandler = createTagHandler;
         this.editTagHandler = editTagHandler;
         this.deleteTagHandler = deleteTagHandler;
         this.getTagByIdHandler = getTagByIdHandler;
         this.getAllTagsHandler = getAllTagsHandler;
+        this.searchTagsHandler = searchTagsHandler;
     }
 
     @GetMapping("/tags/{id}")
-    public ApiResponse<Tag> getTagById(@PathVariable Long id) {
-        try {
-            Tag tag = getTagByIdHandler.handle(id);
-            return ApiResponse.success("Tag retrieved successfully", tag);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+    public ApiResponse<TagResponse> getTagById(@PathVariable Long id) {
+        Tag tag = getTagByIdHandler.handle(id);
+        return ApiResponse.success("Tag retrieved successfully", TagResponse.from(tag));
     }
 
     @GetMapping("/tags")
@@ -50,44 +49,43 @@ public class TagController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        try {
-            Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-            Pageable pageable = PageRequest.of(page, size, sort);
-            Page<Tag> tagsPage = getAllTagsHandler.handle(pageable);
-            Page<TagResponse> response = tagsPage.map(TagResponse::from);
-            return ApiResponse.success("Tags retrieved successfully", response);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Tag> tagsPage = getAllTagsHandler.handle(pageable);
+        Page<TagResponse> response = tagsPage.map(TagResponse::from);
+        return ApiResponse.success("Tags retrieved successfully", response);
+    }
+
+    @GetMapping("/tags/search")
+    public ApiResponse<Page<TagResponse>> searchTags(
+            @RequestParam(required = true) String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending
+    ) {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Tag> tagsPage = searchTagsHandler.searchByName(name, pageable);
+        Page<TagResponse> response = tagsPage.map(TagResponse::from);
+        return ApiResponse.success("Tags search completed successfully", response);
     }
 
     @PostMapping("/tags")
-    public ApiResponse<Tag> createTag(@RequestBody CreateTagRequest request) {
-        try {
-            Tag tag = createTagHandler.handle(request);
-            return ApiResponse.success("Tag created successfully", tag);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+    public ApiResponse<TagResponse> createTag(@RequestBody @jakarta.validation.Valid CreateTagRequest request) {
+        Tag tag = createTagHandler.handle(request);
+        return ApiResponse.success("Tag created successfully", TagResponse.from(tag));
     }
 
     @PutMapping("/tags")
-    public ApiResponse<Tag> editTag(@RequestBody EditTagRequest request) {
-        try {
-            Tag tag = editTagHandler.handle(request);
-            return ApiResponse.success("Tag updated successfully", tag);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+    public ApiResponse<TagResponse> editTag(@RequestBody @jakarta.validation.Valid EditTagRequest request) {
+        Tag tag = editTagHandler.handle(request);
+        return ApiResponse.success("Tag updated successfully", TagResponse.from(tag));
     }
 
     @DeleteMapping("/tags/{id}")
     public ApiResponse<Void> deleteTag(@PathVariable Long id) {
-        try {
-            deleteTagHandler.handle(id);
-            return ApiResponse.success("Tag deleted successfully");
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+        deleteTagHandler.handle(id);
+        return ApiResponse.success("Tag deleted successfully");
     }
 }

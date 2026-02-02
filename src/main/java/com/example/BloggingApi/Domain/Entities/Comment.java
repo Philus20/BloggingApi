@@ -6,7 +6,9 @@ import  jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "comments", indexes = {
+        @Index(name = "idx_comment_created_at", columnList = "created_at")
+})
 public class Comment {
 
     @Id

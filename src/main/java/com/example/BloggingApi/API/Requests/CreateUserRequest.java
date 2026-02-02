@@ -1,13 +1,18 @@
 package com.example.BloggingApi.API.Requests;
-import jakarta.validation.constraints.NotBlank;
+
+import com.example.BloggingApi.API.Validation.UniqueEmail;
+import com.example.BloggingApi.API.Validation.UniqueUsername;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record CreateUserRequest(
         @NotBlank
+        @UniqueUsername
         String username,
 
         @Email
+        @UniqueEmail
         String email,
 
         @NotBlank

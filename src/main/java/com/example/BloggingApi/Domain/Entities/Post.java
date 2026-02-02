@@ -7,7 +7,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "posts", indexes = {
+        @Index(name = "idx_post_title", columnList = "title"),
+        @Index(name = "idx_post_created_at", columnList = "created_at")
+})
 public class Post {
 
     @Id

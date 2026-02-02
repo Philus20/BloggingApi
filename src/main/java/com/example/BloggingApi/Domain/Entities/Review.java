@@ -4,7 +4,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", indexes = {
+        @Index(name = "idx_review_rating", columnList = "rating"),
+        // Note: Indexing text columns can be heavy; usually better to use full-text search engine (e.g. ElasticSearch)
+        // but for simple SQL LIKE queries, standard B-tree might not be used unless prefix search.
+        // We add it here for potential future optimizations or exact matches.
+        @Index(name = "idx_review_comment", columnList = "comment")
+})
 public class Review {
 
     @Id

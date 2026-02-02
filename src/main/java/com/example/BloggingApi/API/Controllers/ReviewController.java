@@ -9,6 +9,7 @@ import com.example.BloggingApi.Application.Commands.DeleteCommands.DeleteReview;
 import com.example.BloggingApi.Application.Commands.EditCommands.EditReview;
 import com.example.BloggingApi.Application.Queries.GetAllReviews;
 import com.example.BloggingApi.Application.Queries.GetReviewById;
+import com.example.BloggingApi.Application.Queries.SearchReviews;
 import com.example.BloggingApi.Domain.Entities.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,23 +25,21 @@ public class ReviewController {
     private final DeleteReview deleteReviewHandler;
     private final GetReviewById getReviewByIdHandler;
     private final GetAllReviews getAllReviewsHandler;
+    private final SearchReviews searchReviewsHandler;
 
-    public ReviewController(CreateReview createReviewHandler, EditReview editReviewHandler, DeleteReview deleteReviewHandler, GetReviewById getReviewByIdHandler, GetAllReviews getAllReviewsHandler) {
+    public ReviewController(CreateReview createReviewHandler, EditReview editReviewHandler, DeleteReview deleteReviewHandler, GetReviewById getReviewByIdHandler, GetAllReviews getAllReviewsHandler, SearchReviews searchReviewsHandler) {
         this.createReviewHandler = createReviewHandler;
         this.editReviewHandler = editReviewHandler;
         this.deleteReviewHandler = deleteReviewHandler;
         this.getReviewByIdHandler = getReviewByIdHandler;
         this.getAllReviewsHandler = getAllReviewsHandler;
+        this.searchReviewsHandler = searchReviewsHandler;
     }
 
     @GetMapping("/reviews/{id}")
-    public ApiResponse<Review> getReviewById(@PathVariable Long id) {
-        try {
-            Review review = getReviewByIdHandler.handle(id);
-            return ApiResponse.success("Review retrieved successfully", review);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+    public ApiResponse<ReviewResponse> getReviewById(@PathVariable Long id) {
+        Review review = getReviewByIdHandler.handle(id);
+        return ApiResponse.success("Review retrieved successfully", ReviewResponse.from(review));
     }
 
     @GetMapping("/reviews")
@@ -50,44 +49,58 @@ public class ReviewController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        try {
-            Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-            Pageable pageable = PageRequest.of(page, size, sort);
-            Page<Review> reviewsPage = getAllReviewsHandler.handle(pageable);
-            Page<ReviewResponse> response = reviewsPage.map(ReviewResponse::from);
-            return ApiResponse.success("Reviews retrieved successfully", response);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Review> reviewsPage = getAllReviewsHandler.handle(pageable);
+        Page<ReviewResponse> response = reviewsPage.map(ReviewResponse::from);
+        return ApiResponse.success("Reviews retrieved successfully", response);
+    }
+
+
+
+    @GetMapping("/reviews/search")
+    public ApiResponse<Page<ReviewResponse>> searchReviews(
+            @RequestParam(required = false) String comment,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) String author,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending
+    ) {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Review> reviewsPage;
+
+        if (comment != null && !comment.isBlank()) {
+            reviewsPage = searchReviewsHandler.searchByComment(comment, pageable);
+        } else if (rating != null) {
+            reviewsPage = searchReviewsHandler.searchByRating(rating, pageable);
+        } else if (author != null && !author.isBlank()) {
+            reviewsPage = searchReviewsHandler.searchByAuthor(author, pageable);
+        } else {
+            throw new IllegalArgumentException("Please provide at least one search parameter: comment, rating, or author");
         }
+
+        Page<ReviewResponse> response = reviewsPage.map(ReviewResponse::from);
+        return ApiResponse.success("Reviews search completed successfully", response);
     }
 
     @PostMapping("/reviews")
-    public ApiResponse<Review> createReview(@RequestBody CreateReviewRequest request) {
-        try {
-            Review review = createReviewHandler.handle(request);
-            return ApiResponse.success("Review created successfully", review);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+    public ApiResponse<ReviewResponse> createReview(@RequestBody @jakarta.validation.Valid CreateReviewRequest request) {
+        Review review = createReviewHandler.handle(request);
+        return ApiResponse.success("Review created successfully", ReviewResponse.from(review));
     }
 
     @PutMapping("/reviews")
-    public ApiResponse<Review> editReview(@RequestBody EditReviewRequest request) {
-        try {
-            Review review = editReviewHandler.handle(request);
-            return ApiResponse.success("Review updated successfully", review);
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+    public ApiResponse<ReviewResponse> editReview(@RequestBody @jakarta.validation.Valid EditReviewRequest request) {
+        Review review = editReviewHandler.handle(request);
+        return ApiResponse.success("Review updated successfully", ReviewResponse.from(review));
     }
 
     @DeleteMapping("/reviews/{id}")
     public ApiResponse<Void> deleteReview(@PathVariable Long id) {
-        try {
-            deleteReviewHandler.handle(id);
-            return ApiResponse.success("Review deleted successfully");
-        } catch (Exception e) {
-            return ApiResponse.failure(e.getMessage());
-        }
+        deleteReviewHandler.handle(id);
+        return ApiResponse.success("Review deleted successfully");
     }
 }
