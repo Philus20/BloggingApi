@@ -49,6 +49,7 @@ public class Post {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    public Post() {}
     // This constructor allows create() to work
     private Post(String title, String content, User author) {
         this.title = title;
@@ -73,4 +74,11 @@ public class Post {
         this.content = content;
 
 }
+
+    public Long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getContent() { return content; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public User getAuthor() { return author; }
+
 }

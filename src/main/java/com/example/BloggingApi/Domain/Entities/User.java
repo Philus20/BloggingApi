@@ -36,6 +36,7 @@ public class User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
 
+    public  User(){}
     private  User(String username, String email, String password) {
         this.username = username;
         this.email = email;
@@ -46,6 +47,15 @@ public class User {
 
     public static User create(String username, String email, String password) {
         return new User(username, email, password);
+    }
+
+    public void update(String username, String email) {
+        if (username != null && !username.isBlank()) {
+            this.username = username;
+        }
+        if (email != null && !email.isBlank()) {
+            this.email = email;
+        }
     }
 
     //getters and setters

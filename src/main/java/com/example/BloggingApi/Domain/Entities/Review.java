@@ -27,5 +27,43 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_id")
     private Post post;
+
+    public Review() {}
+    private Review(int rating, String comment, User user, Post post) {
+        this.rating = rating;
+        this.comment = comment;
+        this.user = user;
+        this.post = post;
+    }
+
+    public static Review create(int rating, String comment, User user, Post post) {
+        return new Review(rating, comment, user, post);
+    }
+
+    public void update(int rating, String comment) {
+        this.rating = rating;
+        this.comment = comment;
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Post getPost() {
+        return post;
+    }
 }
 

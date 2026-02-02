@@ -28,4 +28,42 @@ public class Comment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private User author;
+public Comment() {}
+    private Comment(String content, Post post, User author) {
+        this.content = content;
+        this.post = post;
+        this.author = author;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public static Comment create(String content, Post post, User author) {
+        return new Comment(content, post, author);
+    }
+
+    public void update(String content) {
+        if (content != null && !content.isBlank()) {
+            this.content = content;
+        }
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Post getPost() {
+        return post;
+    }
+
+    public User getAuthor() {
+        return author;
+    }
 }

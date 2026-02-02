@@ -1,29 +1,76 @@
 package com.example.BloggingApi.API.Controllers;
 
 import com.example.BloggingApi.API.Requests.CreateUserRequest;
+import com.example.BloggingApi.API.Requests.EditUserRequest;
 import com.example.BloggingApi.API.Resposes.ApiResponse;
 import com.example.BloggingApi.API.Resposes.UserResponse;
+import com.example.BloggingApi.Application.Commands.CreateCommands.CreateUser;
+import com.example.BloggingApi.Application.Commands.DeleteCommands.DeleteUser;
+import com.example.BloggingApi.Application.Commands.EditCommands.EditUser;
+import com.example.BloggingApi.Application.Queries.GetAllUsers;
+import com.example.BloggingApi.Application.Queries.GetUserById;
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserController {
 
-    private  UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final CreateUser createUserHandler;
+    private final EditUser editUserHandler;
+    private final DeleteUser deleteUserHandler;
+    private final GetUserById getUserByIdHandler;
+    private final GetAllUsers getAllUsersHandler;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, CreateUser createUserHandler, EditUser editUserHandler, DeleteUser deleteUserHandler, GetUserById getUserByIdHandler, GetAllUsers getAllUsersHandler) {
         this.userRepository = userRepository;
+        this.createUserHandler = createUserHandler;
+        this.editUserHandler = editUserHandler;
+        this.deleteUserHandler = deleteUserHandler;
+        this.getUserByIdHandler = getUserByIdHandler;
+        this.getAllUsersHandler = getAllUsersHandler;
+    }
+
+    @GetMapping("/users/{id}")
+    public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
+        try {
+            User user = getUserByIdHandler.handle(id);
+            return ApiResponse.success("User retrieved successfully", new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
+        } catch (Exception e) {
+            return ApiResponse.failure(e.getMessage());
+        }
+    }
+
+    @GetMapping("/users")
+    public ApiResponse<Page<UserResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending
+    ) {
+        try {
+            Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+            Pageable pageable = PageRequest.of(page, size, sort);
+            Page<User> usersPage = getAllUsersHandler.handle(pageable);
+            Page<UserResponse> response = usersPage.map(user ->
+                    new UserResponse(user.getId(), user.getUsername(), user.getEmail())
+            );
+            return ApiResponse.success("Users retrieved successfully", response);
+        } catch (Exception e) {
+            return ApiResponse.failure(e.getMessage());
+        }
     }
 
     @PostMapping("/users")
     public ApiResponse<UserResponse> createUser(@RequestBody CreateUserRequest request) {
 
         try{
-            User user = User.create(request.username(), request.email(), request.password());
-            userRepository.save(user);
+            User user = createUserHandler.handle(request);
 
             return ApiResponse.success("User created successfully", new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
         } catch (Exception e) {
@@ -31,4 +78,25 @@ public class UserController {
         }
     }
 
+    @PutMapping("/users")
+    public ApiResponse<UserResponse> editUser(@RequestBody EditUserRequest request) {
+        try {
+            User user = editUserHandler.handle(request);
+            return ApiResponse.success("User updated successfully", new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
+        } catch (Exception e) {
+            return ApiResponse.failure(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
+        try {
+            deleteUserHandler.handle(id);
+            return ApiResponse.success("User deleted successfully");
+        } catch (Exception e) {
+            return ApiResponse.failure(e.getMessage());
+        }
+    }
+
 }
+

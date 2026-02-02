@@ -22,4 +22,32 @@ public class Tag {
 
     @ManyToMany(mappedBy = "tags")
     private Set<Post> posts = new HashSet<>();
+
+    public Tag() {}
+    private Tag(String name) {
+        this.name = name;
+    }
+
+    public static Tag create(String name) {
+        return new Tag(name);
+    }
+
+    public void update(String name) {
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Set<Post> getPosts() {
+        return posts;
+    }
 }
