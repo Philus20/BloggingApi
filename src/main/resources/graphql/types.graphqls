@@ -1,0 +1,87 @@
+# Key Types
+
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    role: String
+    createdAt: String
+    posts: [Post]
+    comments: [Comment]
+    reviews: [Review]
+}
+
+type Post {
+    id: ID!
+    title: String!
+    content: String!
+    createdAt: String
+    author: User!
+    comments: [Comment]
+    tags: [Tag]
+    reviews: [Review]
+}
+
+type Comment {
+    id: ID!
+    content: String!
+    createdAt: String
+    post: Post!
+    author: User!
+}
+
+type Tag {
+    id: ID!
+    name: String!
+    posts: [Post]
+}
+
+type Review {
+    id: ID!
+    rating: Int!
+    comment: String
+    user: User!
+    post: Post!
+}
+
+# Pagination Types
+
+type UserPage {
+    content: [User!]!
+    totalPages: Int!
+    totalElements: Int!
+    size: Int!
+    number: Int!
+}
+
+type PostPage {
+    content: [Post!]!
+    totalPages: Int!
+    totalElements: Int!
+    size: Int!
+    number: Int!
+}
+
+type CommentPage {
+    content: [Comment!]!
+    totalPages: Int!
+    totalElements: Int!
+    size: Int!
+    number: Int!
+}
+
+type TagPage {
+    content: [Tag!]!
+    totalPages: Int!
+    totalElements: Int!
+    size: Int!
+    number: Int!
+}
+
+type ReviewPage {
+    content: [Review!]!
+    totalPages: Int!
+    totalElements: Int!
+    size: Int!
+    number: Int!
+}

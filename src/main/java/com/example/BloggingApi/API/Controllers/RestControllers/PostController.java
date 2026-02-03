@@ -1,4 +1,4 @@
-package com.example.BloggingApi.API.Controllers;
+package com.example.BloggingApi.API.Controllers.RestControllers;
 
 
 import com.example.BloggingApi.API.Requests.CreatePostRequest;
@@ -17,8 +17,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 public class PostController {

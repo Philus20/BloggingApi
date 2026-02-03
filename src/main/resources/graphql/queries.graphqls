@@ -1,0 +1,26 @@
+type Query {
+    # User Queries
+    getUser(id: ID!): User
+    listUsers(page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): UserPage!
+    searchUsers(keyword: String, username: String, email: String, page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): UserPage!
+
+    # Post Queries
+    getPost(id: ID!): Post
+    listPosts(page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): PostPage!
+    searchPosts(keyword: String, title: String, author: String, page: Int = 0, size: Int = 5, sortBy: String = "createdAt", ascending: Boolean = false): PostPage!
+
+    # Comment Queries
+    getComment(id: ID!): Comment
+    listComments(page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): CommentPage!
+    searchComments(content: String, author: String, page: Int = 0, size: Int = 5, sortBy: String = "createdAt", ascending: Boolean = false): CommentPage!
+
+    # Tag Queries
+    getTag(id: ID!): Tag
+    listTags(page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): TagPage!
+    searchTags(name: String!, page: Int = 0, size: Int = 5, sortBy: String = "name", ascending: Boolean = true): TagPage!
+
+    # Review Queries
+    getReview(id: ID!): Review
+    listReviews(page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): ReviewPage!
+    searchReviews(comment: String, rating: Int, author: String, page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): ReviewPage!
+}

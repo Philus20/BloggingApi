@@ -1,0 +1,26 @@
+type Mutation {
+    # User Mutations
+    createUser(username: String!, email: String!, password: String!): User!
+    editUser(id: ID!, username: String, email: String): User!
+    deleteUser(id: ID!): String!
+
+    # Post Mutations
+    createPost(title: String!, content: String!, authorId: ID!): Post!
+    editPost(id: ID!, title: String!, content: String!): Post!
+    deletePost(id: ID!): String!
+
+    # Comment Mutations
+    createComment(content: String!, postId: ID!, authorId: ID!): Comment!
+    editComment(id: ID!, content: String!): Comment!
+    deleteComment(id: ID!): String!
+
+    # Tag Mutations
+    createTag(name: String!): Tag!
+    editTag(id: ID!, name: String!): Tag!
+    deleteTag(id: ID!): String!
+
+    # Review Mutations
+    createReview(rating: Int!, comment: String, userId: ID!, postId: ID!): Review!
+    editReview(id: ID!, rating: Int!, comment: String): Review!
+    deleteReview(id: ID!): String!
+}

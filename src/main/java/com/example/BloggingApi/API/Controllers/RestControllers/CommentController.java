@@ -1,4 +1,4 @@
-package com.example.BloggingApi.API.Controllers;
+package com.example.BloggingApi.API.Controllers.RestControllers;
 
 import com.example.BloggingApi.API.Requests.CreateCommentRequest;
 import com.example.BloggingApi.API.Requests.EditCommentRequest;

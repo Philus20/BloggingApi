@@ -4,7 +4,6 @@ import com.example.BloggingApi.API.Requests.CreatePostRequest;
 import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Domain.Repositories.IRepository;
 import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
 import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
 import org.springframework.stereotype.Service;

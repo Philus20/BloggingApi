@@ -3,7 +3,6 @@ package com.example.BloggingApi.Application.Commands.EditCommands;
 import com.example.BloggingApi.API.Requests.EditPostRequest;
 import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Domain.Repositories.IRepository;
 import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
