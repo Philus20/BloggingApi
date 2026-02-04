@@ -16,6 +16,7 @@ public class Comment {
     @Column(name = "comment_id")
     private Long id;
 
+
     @NotBlank
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
