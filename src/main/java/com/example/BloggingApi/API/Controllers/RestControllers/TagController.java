@@ -18,6 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("api/v1")
+
 public class TagController {
 
     private final CreateTag createTagHandler;

@@ -20,6 +20,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("api/v1")
+
 public class PostController {
 
     private final CreatePost createPostHandler;
@@ -48,7 +50,7 @@ public class PostController {
     public ApiResponse<Page<PostsResponse>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "post_id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
@@ -66,7 +68,7 @@ public class PostController {
             @RequestParam(required = false) String author,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "created_at") String sortBy,
             @RequestParam(defaultValue = "false") boolean ascending
     ) {
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);

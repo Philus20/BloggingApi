@@ -23,7 +23,7 @@ public class CreateComment {
         this.userRepository = userRepository;
     }
 
-    public Comment handle(CreateCommentRequest req) throws NullException {
+    public Comment handle(CreateCommentRequest req)  {
         // Validation
         if (req.content() == null || req.content().isBlank()) {
             throw new NullException("Content cannot be blank");

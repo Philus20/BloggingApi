@@ -19,7 +19,7 @@ public class CreatePost {
         this.postRepository = postRepository;
     }
 
-    public Post handle(CreatePostRequest req) throws NullException {
+    public Post handle(CreatePostRequest req)  {
         //  Validation
         System.out.println(req.authorId());
         System.out.println(req.title());

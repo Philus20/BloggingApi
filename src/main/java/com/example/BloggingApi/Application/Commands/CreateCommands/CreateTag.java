@@ -16,7 +16,7 @@ public class CreateTag {
         this.tagRepository = tagRepository;
     }
 
-    public Tag handle(CreateTagRequest req) throws NullException, DuplicateEntityException {
+    public Tag handle(CreateTagRequest req)  {
         // Validation
         if (req.name() == null || req.name().isBlank()) {
             throw new NullException("Tag name cannot be blank");

@@ -19,6 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("api/v1")
+
 public class ReviewController {
 
     private final CreateReview createReviewHandler;

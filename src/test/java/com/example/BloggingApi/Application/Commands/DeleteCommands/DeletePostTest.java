@@ -2,7 +2,7 @@ package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
 import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -37,7 +37,7 @@ class DeletePostTest {
         deletePost.handle(1L);
 
         // Assert
-        verify(postRepository, times(1)).delete(post);
+        verify(postRepository, times(1)).delete(Math.toIntExact(post.getId()));
     }
 
     @Test

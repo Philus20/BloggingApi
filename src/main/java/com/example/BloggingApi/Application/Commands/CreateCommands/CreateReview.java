@@ -23,7 +23,7 @@ public class CreateReview {
         this.postRepository = postRepository;
     }
 
-    public Review handle(CreateReviewRequest req) throws NullException {
+    public Review handle(CreateReviewRequest req)  {
         // Validation
         if (req.rating() < 1 || req.rating() > 5) {
             throw new NullException("Rating must be between 1 and 5");

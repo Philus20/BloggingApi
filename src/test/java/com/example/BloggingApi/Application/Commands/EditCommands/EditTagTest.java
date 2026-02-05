@@ -1,10 +1,12 @@
-```java
 package com.example.BloggingApi.Application.Commands.EditCommands;
 
+
+
 import com.example.BloggingApi.API.Requests.EditTagRequest;
+import com.example.BloggingApi.Application.Commands.EditCommands.EditTag;
 import com.example.BloggingApi.Domain.Entities.Tag;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.TagRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -54,4 +56,3 @@ class EditTagTest {
         assertThrows(NullException.class, () -> editTag.handle(request));
     }
 }
-```

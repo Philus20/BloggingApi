@@ -19,6 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("api/v1")
+
 public class UserController {
 
     private final UserRepository userRepository;
@@ -40,8 +42,8 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}")
-    public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
-        User user = getUserByIdHandler.handle(id);
+    public ApiResponse<UserResponse> getUserById(@PathVariable Long user_id) {
+        User user = getUserByIdHandler.handle(user_id);
         return ApiResponse.success("User retrieved successfully", new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
     }
 

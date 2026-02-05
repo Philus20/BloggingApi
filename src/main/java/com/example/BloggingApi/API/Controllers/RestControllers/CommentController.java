@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("api/v1")
 public class CommentController {
 
     private final CreateComment createCommentHandler;

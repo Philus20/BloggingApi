@@ -1,5 +1,8 @@
 package com.example.BloggingApi.API.Requests;
 
-public record EditPostRequest (Long id,String title, String content)
+import com.example.BloggingApi.API.Validation.Numeric;
+
+public record EditPostRequest (@Numeric
+                               Long id, String title, String content)
 
 {}

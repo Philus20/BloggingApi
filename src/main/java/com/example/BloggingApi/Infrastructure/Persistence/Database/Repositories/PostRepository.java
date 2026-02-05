@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @org.springframework.stereotype.Repository
 public class PostRepository implements Repository<Post> {
@@ -154,32 +156,68 @@ public class PostRepository implements Repository<Post> {
     // Additional methods for query services
     public Page<Post> findAll(Pageable pageable) {
         try (Connection connection = connectionService.createConnection()) {
-            // Get total count
+
+            // 1️⃣ Get total count
+            long totalElements;
             String countQuery = "SELECT COUNT(*) FROM posts";
-            try (PreparedStatement countStmt = connection.prepareStatement(countQuery)) {
-                try (ResultSet countRs = countStmt.executeQuery()) {
-                    long totalElements = 0;
-                    if (countRs.next()) {
-                        totalElements = countRs.getLong(1);
-                    }
-                    
-                    // Get paginated results
-                    String query = "SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?";
-                    try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                        stmt.setInt(1, pageable.getPageSize());
-                        stmt.setInt(2, (int) pageable.getOffset());
-                        try (ResultSet rs = stmt.executeQuery()) {
-                            List<Post> posts = new ArrayList<>();
-                            while (rs.next()) {
-                                posts.add(mapResultSetToPost(rs));
-                            }
-                            return new PageImpl<>(posts, pageable, totalElements);
-                        }
+
+            try (PreparedStatement countStmt = connection.prepareStatement(countQuery);
+                 ResultSet countRs = countStmt.executeQuery()) {
+
+                countRs.next();
+                totalElements = countRs.getLong(1);
+            }
+
+            // 2️⃣ Build main query (with sorting)
+            StringBuilder queryBuilder = new StringBuilder("SELECT * FROM posts");
+
+            if (pageable.getSort().isSorted()) {
+                Sort.Order order = pageable.getSort().iterator().next();
+
+                String sortColumn = order.getProperty();
+                String sortDirection = order.getDirection().name();
+
+                // 🔒 Whitelist allowed columns
+                Set<String> allowedSortColumns = Set.of(
+                        "post_id",
+                        "user_name",
+                        "email"
+                );
+
+                if (!allowedSortColumns.contains(sortColumn)) {
+                    throw new IllegalArgumentException("Invalid sort column: " + sortColumn);
+                }
+
+                queryBuilder
+                        .append(" ORDER BY ")
+                        .append(sortColumn)
+                        .append(" ")
+                        .append(sortDirection);
+            }
+
+            queryBuilder.append(" LIMIT ? OFFSET ?");
+
+            String query = queryBuilder.toString();
+
+            // 3️⃣ Execute paginated query
+            List<Post> posts = new ArrayList<>();
+
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setInt(1, pageable.getPageSize());
+                stmt.setInt(2, (int) pageable.getOffset());
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        posts.add(mapResultSetToPost(rs));
                     }
                 }
             }
+
+            // 4️⃣ Return Spring Page
+            return new PageImpl<>(posts, pageable, totalElements);
+
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to find all posts with pagination", e);
+            throw new RuntimeException("Failed to find all Posts with pagination", e);
         }
     }
 

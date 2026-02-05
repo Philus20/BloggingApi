@@ -3,7 +3,7 @@ package com.example.BloggingApi.Application.Commands.EditCommands;
 import com.example.BloggingApi.API.Requests.EditReviewRequest;
 import com.example.BloggingApi.Domain.Entities.Review;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

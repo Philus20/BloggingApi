@@ -5,9 +5,7 @@ import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Entities.Review;
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -56,7 +54,7 @@ class CreateReviewTest {
         assertNotNull(result);
         assertEquals(5, result.getRating());
         assertEquals("Great post", result.getComment());
-        verify(reviewRepository, times(1)).save(any(Review.class));
+        verify(reviewRepository, times(1)).create(any(Review.class));
     }
 
     @Test

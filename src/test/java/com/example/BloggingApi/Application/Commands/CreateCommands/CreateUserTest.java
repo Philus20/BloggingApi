@@ -3,7 +3,7 @@ package com.example.BloggingApi.Application.Commands.CreateCommands;
 import com.example.BloggingApi.API.Requests.CreateUserRequest;
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -36,7 +36,7 @@ class CreateUserTest {
                 "password123"
         );
 
-        when(userRepository.findByUsername("john_doe")).thenReturn(null);
+        when(userRepository.findByString("john_doe")).thenReturn(null);
 
         // Act
         User result = createUser.handle(request);

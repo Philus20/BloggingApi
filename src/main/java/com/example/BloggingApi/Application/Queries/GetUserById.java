@@ -14,7 +14,7 @@ public class GetUserById {
         this.userRepository = userRepository;
     }
 
-    public User handle(Long userId) throws NullException {
+    public User handle(Long userId)  {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NullException("User not found"));
     }

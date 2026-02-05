@@ -19,7 +19,7 @@ public class CreateUser {
 
 
 
-    public User handle(CreateUserRequest req) throws NullException {
+    public User handle(CreateUserRequest req)  {
 
         //  Validation
 

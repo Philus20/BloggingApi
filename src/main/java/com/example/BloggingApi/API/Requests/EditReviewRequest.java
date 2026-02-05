@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 public record EditReviewRequest(
-        @NotBlank
         Long id,
         @Min(1)
         @Max(5)
