@@ -2,7 +2,7 @@ package com.example.BloggingApi.Application.Queries;
 
 import com.example.BloggingApi.Domain.Entities.Tag;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.TagRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.TagRepository;
 import org.springframework.stereotype.Service;
 
 @Service

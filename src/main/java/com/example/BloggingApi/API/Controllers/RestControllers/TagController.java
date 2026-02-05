@@ -49,7 +49,7 @@ public class TagController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Tag> tagsPage = getAllTagsHandler.handle(pageable);
         Page<TagResponse> response = tagsPage.map(TagResponse::from);
@@ -64,7 +64,7 @@ public class TagController {
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Tag> tagsPage = searchTagsHandler.searchByName(name, pageable);
         Page<TagResponse> response = tagsPage.map(TagResponse::from);

@@ -1,11 +1,9 @@
 package com.example.BloggingApi.API.Validation;
 
-import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 
 public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, String> {
 
@@ -17,7 +15,7 @@ public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, St
         if (email == null || email.isBlank()) {
             return true; // Let @NotBlank handle nulls
         }
-        // Using the search method we added earlier which returns a Page
-        return userRepository.findByEmailContainingIgnoreCase(email, Pageable.unpaged()).isEmpty();
+        // Using exact email match for uniqueness validation
+        return userRepository.findByEmailExact(email).isEmpty();
     }
 }

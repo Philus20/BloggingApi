@@ -2,8 +2,8 @@ package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
 import com.example.BloggingApi.Domain.Entities.Comment;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
-import jakarta.transaction.Transactional;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.CommentRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,9 +17,12 @@ public class DeleteComment {
 
     @Transactional
     public void handle(Long commentId) throws NullException {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NullException("Comment not found"));
+        Comment comment = commentRepository.findByInteger(commentId.intValue());
+        
+        if (comment == null) {
+            throw new NullException("Comment not found");
+        }
 
-        commentRepository.delete(comment);
+        commentRepository.delete(commentId.intValue());
     }
 }

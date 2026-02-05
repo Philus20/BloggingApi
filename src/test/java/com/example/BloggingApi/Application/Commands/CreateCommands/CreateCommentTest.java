@@ -5,9 +5,10 @@ import com.example.BloggingApi.Domain.Entities.Comment;
 import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.CommentRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.PostRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -55,7 +56,7 @@ class CreateCommentTest {
         // Assert
         assertNotNull(result);
         assertEquals("Test Comment", result.getContent());
-        verify(commentRepository, times(1)).save(any(Comment.class));
+        verify(commentRepository, times(1)).create(any(Comment.class));
     }
 
     @Test

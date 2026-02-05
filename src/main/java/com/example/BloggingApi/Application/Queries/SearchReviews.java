@@ -1,7 +1,7 @@
 package com.example.BloggingApi.Application.Queries;
 
 import com.example.BloggingApi.Domain.Entities.Review;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.ReviewRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

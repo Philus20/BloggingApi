@@ -1,75 +1,134 @@
 package com.example.BloggingApi.Domain.Entities;
 
-import jakarta.persistence.*;
+
+
 import jakarta.validation.constraints.*;
 
-@Entity
-@Table(name = "reviews", indexes = {
-        @Index(name = "idx_review_rating", columnList = "rating"),
-        // Note: Indexing text columns can be heavy; usually better to use full-text search engine (e.g. ElasticSearch)
-        // but for simple SQL LIKE queries, standard B-tree might not be used unless prefix search.
-        // We add it here for potential future optimizations or exact matches.
-        @Index(name = "idx_review_comment", columnList = "comment")
-})
+
+
 public class Review {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "review_id")
+
+
     private Long id;
 
+
+
     @Min(1)
+
     @Max(5)
-    @Column(nullable = false)
+
     private int rating;
 
-    @Column(columnDefinition = "TEXT")
+
+
     private String comment;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
+
+
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "post_id")
+
+
     private Post post;
 
+
+
     public Review() {}
+
     private Review(int rating, String comment, User user, Post post) {
+
         this.rating = rating;
+
         this.comment = comment;
+
         this.user = user;
+
+        this.post = post;
+
+    }
+
+
+
+    public static Review create(int rating, String comment, User user, Post post) {
+
+        return new Review(rating, comment, user, post);
+
+    }
+
+
+
+    public void update(int rating, String comment) {
+
+        this.rating = rating;
+
+        this.comment = comment;
+
+    }
+
+
+
+    // Getters
+
+    public Long getId() {
+
+        return id;
+
+    }
+
+
+
+    public int getRating() {
+
+        return rating;
+
+    }
+
+
+
+    public String getComment() {
+
+        return comment;
+
+    }
+
+
+
+    public User getUser() {
+
+        return user;
+
+    }
+
+
+
+    public Post getPost() {
+
+        return post;
+
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setPost(Post post) {
         this.post = post;
     }
 
-    public static Review create(int rating, String comment, User user, Post post) {
-        return new Review(rating, comment, user, post);
-    }
-
-    public void update(int rating, String comment) {
-        this.rating = rating;
-        this.comment = comment;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public int getRating() {
-        return rating;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Post getPost() {
-        return post;
-    }
 }
+
+
 

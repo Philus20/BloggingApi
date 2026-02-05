@@ -2,8 +2,8 @@ package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
-import jakarta.transaction.Transactional;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,9 +17,12 @@ public class DeleteUser {
 
     @Transactional
     public void handle(Long userId) throws NullException {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NullException("User not found"));
+        User user = userRepository.findByInteger(userId.intValue());
+        
+        if (user == null) {
+            throw new NullException("User not found");
+        }
 
-        userRepository.delete(user);
+        userRepository.delete(userId.intValue());
     }
 }

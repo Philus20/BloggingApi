@@ -3,8 +3,9 @@ package com.example.BloggingApi.Application.Commands.CreateCommands;
 import com.example.BloggingApi.API.Requests.CreatePostRequest;
 import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.PostRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,6 @@ class CreatePostTest {
         assertEquals("My First Post", post.getTitle());
         assertEquals("This is the content of my first post.", post.getContent());
 
-        Mockito.verify(postRepository).save(post);
+        Mockito.verify(postRepository).create(post);
     }
 }

@@ -12,6 +12,7 @@ import com.example.BloggingApi.Application.Queries.GetAllPosts;
 import com.example.BloggingApi.Application.Queries.GetPostById;
 import com.example.BloggingApi.Application.Queries.SearchPosts;
 import com.example.BloggingApi.Domain.Entities.Post;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,7 +51,7 @@ public class PostController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Post> postsPage = getAllPostsHandler.handle(pageable);
         Page<PostsResponse> response =
@@ -68,7 +69,7 @@ public class PostController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "false") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Post> postsPage;
 
@@ -87,13 +88,13 @@ public class PostController {
     }
 
     @PostMapping("/posts")
-    public ApiResponse<PostsResponse> createPost(@RequestBody @jakarta.validation.Valid CreatePostRequest request) {
+    public ApiResponse<PostsResponse> createPost(@RequestBody @Valid CreatePostRequest request) {
         Post createdPost = createPostHandler.handle(request);
         return ApiResponse.success("Success", PostsResponse.from(createdPost));
     }
 
     @PutMapping("/posts")
-    public ApiResponse<PostsResponse> editPost(@RequestBody @jakarta.validation.Valid EditPostRequest request) {
+    public ApiResponse<PostsResponse> editPost(@RequestBody @Valid EditPostRequest request) {
         Post updatedPost = editPostHandler.handle(request);
         return ApiResponse.success("Success", PostsResponse.from(updatedPost));
     }

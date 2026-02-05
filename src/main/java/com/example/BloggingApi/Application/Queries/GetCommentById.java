@@ -2,7 +2,7 @@ package com.example.BloggingApi.Application.Queries;
 
 import com.example.BloggingApi.Domain.Entities.Comment;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.CommentRepository;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -1,6 +1,6 @@
 package com.example.BloggingApi.API.Validation;
 
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +15,6 @@ public class UniqueUsernameValidator implements ConstraintValidator<UniqueUserna
         if (username == null || username.isBlank()) {
             return true; // Let @NotBlank handle nulls
         }
-        return userRepository.findByUsername(username) == null;
+        return userRepository.findByString(username) == null;
     }
 }

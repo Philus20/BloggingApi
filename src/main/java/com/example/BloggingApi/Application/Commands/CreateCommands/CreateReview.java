@@ -5,9 +5,9 @@ import com.example.BloggingApi.Domain.Entities.Post;
 import com.example.BloggingApi.Domain.Entities.Review;
 import com.example.BloggingApi.Domain.Entities.User;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.PostRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.ReviewRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,18 +36,24 @@ public class CreateReview {
         }
 
         // Fetch User entity
-        User user = userRepository.findById(req.userId())
-                .orElseThrow(() -> new NullException("User not found"));
+        User user = userRepository.findByInteger(req.userId().intValue());
+        
+        if (user == null) {
+            throw new NullException("User not found");
+        }
 
         // Fetch Post entity
-        Post post = postRepository.findById(req.postId())
-                .orElseThrow(() -> new NullException("Post not found"));
+        Post post = postRepository.findByInteger(req.postId().intValue());
+        
+        if (post == null) {
+            throw new NullException("Post not found");
+        }
 
         // Create Review entity
         Review review = Review.create(req.rating(), req.comment(), user, post);
 
         // Save to DB
-        reviewRepository.save(review);
+        reviewRepository.create(review);
 
         return review;
     }

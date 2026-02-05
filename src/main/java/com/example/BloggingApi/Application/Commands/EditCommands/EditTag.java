@@ -3,8 +3,8 @@ package com.example.BloggingApi.Application.Commands.EditCommands;
 import com.example.BloggingApi.API.Requests.EditTagRequest;
 import com.example.BloggingApi.Domain.Entities.Tag;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.TagRepository;
-import jakarta.transaction.Transactional;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.TagRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,8 +18,11 @@ public class EditTag {
 
     @Transactional
     public Tag handle(EditTagRequest request) throws NullException {
-        Tag tag = tagRepository.findById(request.id())
-                .orElseThrow(() -> new NullException("Tag not found"));
+        Tag tag = tagRepository.findByInteger(request.id().intValue());
+        
+        if (tag == null) {
+            throw new NullException("Tag not found");
+        }
 
         tag.update(request.name());
 

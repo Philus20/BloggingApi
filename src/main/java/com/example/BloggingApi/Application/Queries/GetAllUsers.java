@@ -1,7 +1,7 @@
 package com.example.BloggingApi.Application.Queries;
 
 import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,4 +19,6 @@ public class GetAllUsers {
         return userRepository.findAll(pageable);
     }
 }
+
+
 

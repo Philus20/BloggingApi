@@ -11,6 +11,7 @@ import com.example.BloggingApi.Application.Queries.GetAllReviews;
 import com.example.BloggingApi.Application.Queries.GetReviewById;
 import com.example.BloggingApi.Application.Queries.SearchReviews;
 import com.example.BloggingApi.Domain.Entities.Review;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +50,7 @@ public class ReviewController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Review> reviewsPage = getAllReviewsHandler.handle(pageable);
         Page<ReviewResponse> response = reviewsPage.map(ReviewResponse::from);
@@ -68,7 +69,7 @@ public class ReviewController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Review> reviewsPage;
 
@@ -87,7 +88,7 @@ public class ReviewController {
     }
 
     @PostMapping("/reviews")
-    public ApiResponse<ReviewResponse> createReview(@RequestBody @jakarta.validation.Valid CreateReviewRequest request) {
+    public ApiResponse<ReviewResponse> createReview(@RequestBody @Valid CreateReviewRequest request) {
         Review review = createReviewHandler.handle(request);
         return ApiResponse.success("Review created successfully", ReviewResponse.from(review));
     }

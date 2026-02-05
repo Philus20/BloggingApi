@@ -9,9 +9,7 @@ public record CreateReviewRequest(
         @Max(5)
         int rating,
         String comment,
-        @NotBlank
         Long userId,
-        @NotBlank
         Long postId
 ) {
 }

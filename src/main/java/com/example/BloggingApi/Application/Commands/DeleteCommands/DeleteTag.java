@@ -2,9 +2,10 @@ package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
 import com.example.BloggingApi.Domain.Entities.Tag;
 import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.TagRepository;
-import jakarta.transaction.Transactional;
+
+import com.example.BloggingApi.Infrastructure.Persistence.Database.Repositories.TagRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DeleteTag {

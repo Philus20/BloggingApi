@@ -7,7 +7,7 @@ public record CreatePostRequest(
     String title,
     @NotBlank
     String content,
-    @NotBlank
+
     Long authorId
 ){
 
