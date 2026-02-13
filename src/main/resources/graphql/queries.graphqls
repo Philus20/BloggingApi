@@ -1,7 +1,7 @@
 type Query {
     # User Queries
     getUser(id: ID!): User
-    listUsers(page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): UserPage!
+    listUsers(page: Int = 0, size: Int = 5, sortBy: String = "user_id", ascending: Boolean = true): UserPage!
     searchUsers(keyword: String, username: String, email: String, page: Int = 0, size: Int = 5, sortBy: String = "id", ascending: Boolean = true): UserPage!
 
     # Post Queries

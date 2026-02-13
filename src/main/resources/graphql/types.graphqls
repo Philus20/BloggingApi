@@ -1,7 +1,7 @@
 # Key Types
 
 type User {
-    id: ID!
+    id: ID
     username: String!
     email: String!
     role: String
