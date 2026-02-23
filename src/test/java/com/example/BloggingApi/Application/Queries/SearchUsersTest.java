@@ -1,7 +1,8 @@
 package com.example.BloggingApi.Application.Queries;
 
-import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Repositories.UserRepository;
+import com.example.BloggingApi.Services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,7 +24,7 @@ class SearchUsersTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private SearchUsers searchUsers;
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +39,7 @@ class SearchUsersTest {
         when(userRepository.searchByKeyword("test", pageable)).thenReturn(userPage);
 
         // Act
-        Page<User> result = searchUsers.searchByKeyword("test", pageable);
+        Page<User> result = userService.searchByKeyword("test", pageable);
 
         // Assert
         assertNotNull(result);
@@ -53,7 +54,7 @@ class SearchUsersTest {
         when(userRepository.findByUsernameContainingIgnoreCase("test", pageable)).thenReturn(userPage);
 
         // Act
-        Page<User> result = searchUsers.searchByUsername("test", pageable);
+        Page<User> result = userService.searchByUsername("test", pageable);
 
         // Assert
         assertNotNull(result);
@@ -68,7 +69,7 @@ class SearchUsersTest {
         when(userRepository.findByEmailContainingIgnoreCase("test", pageable)).thenReturn(userPage);
 
         // Act
-        Page<User> result = searchUsers.searchByEmail("test", pageable);
+        Page<User> result = userService.searchByEmail("test", pageable);
 
         // Assert
         assertNotNull(result);

@@ -1,11 +1,11 @@
 package com.example.BloggingApi.Application.Commands.CreateCommands;
 
-import com.example.BloggingApi.API.Requests.CreatePostRequest;
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
-import org.junit.jupiter.api.AfterEach;
+import com.example.BloggingApi.Services.PostService;
+import com.example.BloggingApi.DTOs.Requests.CreatePostRequest;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CreatePostTest {
 
-    private CreatePost createPost;
+    private PostService postService;
     private UserRepository userRepository;
     private PostRepository postRepository;
 
@@ -25,7 +25,7 @@ class CreatePostTest {
         postRepository = Mockito.mock(PostRepository.class);
         userRepository = Mockito.mock(UserRepository.class);
 
-        createPost = new CreatePost(postRepository, userRepository);
+        postService = new PostService(postRepository, userRepository);
     }
 
     @Test
@@ -41,15 +41,17 @@ class CreatePostTest {
 
         Mockito.when(userRepository.findById(1L))
                 .thenReturn(Optional.of(author));
+        Mockito.when(postRepository.save(Mockito.any(Post.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Post post = createPost.handle(request);
+        Post post = postService.create(request);
 
         // Assert
         assertNotNull(post);
         assertEquals("My First Post", post.getTitle());
         assertEquals("This is the content of my first post.", post.getContent());
 
-        Mockito.verify(postRepository).save(post);
+        Mockito.verify(postRepository).save(Mockito.any(Post.class));
     }
 }

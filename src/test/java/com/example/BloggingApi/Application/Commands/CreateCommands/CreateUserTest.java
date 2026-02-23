@@ -1,9 +1,9 @@
 package com.example.BloggingApi.Application.Commands.CreateCommands;
 
-import com.example.BloggingApi.API.Requests.CreateUserRequest;
-import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Services.UserService;
+import com.example.BloggingApi.DTOs.Requests.CreateUserRequest;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,11 +20,11 @@ class CreateUserTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private CreateUser createUser;
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
-        createUser = new CreateUser(userRepository);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -37,9 +37,10 @@ class CreateUserTest {
         );
 
         when(userRepository.findByUsername("john_doe")).thenReturn(null);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        User result = createUser.handle(request);
+        User result = userService.create(request);
 
         // Assert
         assertNotNull(result);

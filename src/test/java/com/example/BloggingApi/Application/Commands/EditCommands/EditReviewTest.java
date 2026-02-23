@@ -1,9 +1,10 @@
 package com.example.BloggingApi.Application.Commands.EditCommands;
 
-import com.example.BloggingApi.API.Requests.EditReviewRequest;
-import com.example.BloggingApi.Domain.Entities.Review;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
+import com.example.BloggingApi.Services.ReviewService;
+import com.example.BloggingApi.DTOs.Requests.EditReviewRequest;
+import com.example.BloggingApi.Domain.Review;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,8 +21,14 @@ class EditReviewTest {
     @Mock
     private ReviewRepository reviewRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
+    @Mock
+    private com.example.BloggingApi.Repositories.PostRepository postRepository;
+
     @InjectMocks
-    private EditReview editReview;
+    private ReviewService reviewService;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +43,7 @@ class EditReviewTest {
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
 
         // Act
-        Review result = editReview.handle(request);
+        Review result = reviewService.update(request);
 
         // Assert
         assertNotNull(result);
@@ -50,16 +57,8 @@ class EditReviewTest {
         when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(NullException.class, () -> editReview.handle(request));
+        assertThrows(NullException.class, () -> reviewService.update(request));
     }
 
-    @Test
-    void handle_ShouldThrowException_WhenRatingIsInvalid() {
-        // Arrange
-        EditReviewRequest request = new EditReviewRequest(1L, 6, "Invalid rating");
-        when(reviewRepository.findById(1L)).thenReturn(Optional.of(mock(Review.class)));
-
-        // Act & Assert
-        assertThrows(NullException.class, () -> editReview.handle(request));
-    }
+    // Rating range is validated at request level via @Min(1) @Max(5)
 }

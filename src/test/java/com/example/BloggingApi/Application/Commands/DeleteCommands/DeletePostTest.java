@@ -1,8 +1,9 @@
 package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
+import com.example.BloggingApi.Services.PostService;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,8 +20,11 @@ class DeletePostTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
     @InjectMocks
-    private DeletePost deletePost;
+    private PostService postService;
 
     @BeforeEach
     void setUp() {
@@ -34,7 +38,7 @@ class DeletePostTest {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
         // Act
-        deletePost.handle(1L);
+        postService.delete(1L);
 
         // Assert
         verify(postRepository, times(1)).delete(post);
@@ -46,7 +50,7 @@ class DeletePostTest {
         when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> deletePost.handle(1L));
+        NullException exception = assertThrows(NullException.class, () -> postService.delete(1L));
         assertEquals("Post not found", exception.getMessage());
         verify(postRepository, never()).delete(any());
     }

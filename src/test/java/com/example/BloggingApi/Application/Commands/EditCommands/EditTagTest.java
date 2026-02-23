@@ -1,10 +1,10 @@
-```java
 package com.example.BloggingApi.Application.Commands.EditCommands;
 
-import com.example.BloggingApi.API.Requests.EditTagRequest;
-import com.example.BloggingApi.Domain.Entities.Tag;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.TagRepository;
+import com.example.BloggingApi.Services.TagService;
+import com.example.BloggingApi.DTOs.Requests.EditTagRequest;
+import com.example.BloggingApi.Domain.Tag;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.TagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,7 +22,7 @@ class EditTagTest {
     private TagRepository tagRepository;
 
     @InjectMocks
-    private EditTag editTag;
+    private TagService tagService;
 
     @BeforeEach
     void setUp() {
@@ -37,7 +37,7 @@ class EditTagTest {
         when(tagRepository.findById(1L)).thenReturn(Optional.of(tag));
 
         // Act
-        Tag result = editTag.handle(request);
+        Tag result = tagService.update(request);
 
         // Assert
         assertNotNull(result);
@@ -51,7 +51,6 @@ class EditTagTest {
         when(tagRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(NullException.class, () -> editTag.handle(request));
+        assertThrows(NullException.class, () -> tagService.update(request));
     }
 }
-```

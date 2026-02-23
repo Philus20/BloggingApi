@@ -1,8 +1,10 @@
 package com.example.BloggingApi.Application.Queries;
 
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
+import com.example.BloggingApi.Services.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,8 +21,11 @@ class GetPostByIdTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
-    private GetPostById getPostById;
+    private PostService postService;
 
     @BeforeEach
     void setUp() {
@@ -34,7 +39,7 @@ class GetPostByIdTest {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
         // Act
-        Post result = getPostById.handle(1L);
+        Post result = postService.getById(1L);
 
         // Assert
         assertNotNull(result);
@@ -47,6 +52,6 @@ class GetPostByIdTest {
         when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(NullException.class, () -> getPostById.handle(1L));
+        assertThrows(NullException.class, () -> postService.getById(1L));
     }
 }

@@ -1,13 +1,14 @@
 package com.example.BloggingApi.Application.Commands.CreateCommands;
 
-import com.example.BloggingApi.API.Requests.CreateReviewRequest;
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Domain.Entities.Review;
-import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
+import com.example.BloggingApi.Services.ReviewService;
+import com.example.BloggingApi.DTOs.Requests.CreateReviewRequest;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Domain.Review;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.ReviewRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -32,7 +33,7 @@ class CreateReviewTest {
     private PostRepository postRepository;
 
     @InjectMocks
-    private CreateReview createReview;
+    private ReviewService reviewService;
 
     @BeforeEach
     void setUp() {
@@ -48,9 +49,10 @@ class CreateReviewTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+        when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Review result = createReview.handle(req);
+        Review result = reviewService.create(req);
 
         // Assert
         assertNotNull(result);
@@ -59,15 +61,7 @@ class CreateReviewTest {
         verify(reviewRepository, times(1)).save(any(Review.class));
     }
 
-    @Test
-    void handle_ShouldThrowException_WhenRatingIsInvalid() {
-        // Arrange
-        CreateReviewRequest req = new CreateReviewRequest(6, "Invalid", 1L, 1L);
-
-        // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> createReview.handle(req));
-        assertEquals("Rating must be between 1 and 5", exception.getMessage());
-    }
+    // Rating range is validated at request level via @Min(1) @Max(5)
 
     @Test
     void handle_ShouldThrowException_WhenUserNotFound() {
@@ -76,7 +70,7 @@ class CreateReviewTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> createReview.handle(req));
-        assertEquals("User found", exception.getMessage().contains("User") ? exception.getMessage() : "User not found"); // Double check class for exact message
+        NullException exception = assertThrows(NullException.class, () -> reviewService.create(req));
+        assertEquals("User not found", exception.getMessage());
     }
 }

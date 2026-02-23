@@ -1,7 +1,8 @@
 package com.example.BloggingApi.Application.Queries;
 
-import com.example.BloggingApi.Domain.Entities.Review;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
+import com.example.BloggingApi.Domain.Review;
+import com.example.BloggingApi.Repositories.ReviewRepository;
+import com.example.BloggingApi.Services.ReviewService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,8 +23,14 @@ class GetAllReviewsTest {
     @Mock
     private ReviewRepository reviewRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
+    @Mock
+    private com.example.BloggingApi.Repositories.PostRepository postRepository;
+
     @InjectMocks
-    private GetAllReviews getAllReviews;
+    private ReviewService reviewService;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +45,7 @@ class GetAllReviewsTest {
         when(reviewRepository.findAll(pageable)).thenReturn(reviewPage);
 
         // Act
-        Page<Review> result = getAllReviews.handle(pageable);
+        Page<Review> result = reviewService.getAll(pageable);
 
         // Assert
         assertNotNull(result);

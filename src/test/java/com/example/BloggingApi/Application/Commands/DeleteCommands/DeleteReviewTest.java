@@ -1,8 +1,9 @@
 package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
-import com.example.BloggingApi.Domain.Entities.Review;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.ReviewRepository;
+import com.example.BloggingApi.Services.ReviewService;
+import com.example.BloggingApi.Domain.Review;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,8 +20,14 @@ class DeleteReviewTest {
     @Mock
     private ReviewRepository reviewRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
+    @Mock
+    private com.example.BloggingApi.Repositories.PostRepository postRepository;
+
     @InjectMocks
-    private DeleteReview deleteReview;
+    private ReviewService reviewService;
 
     @BeforeEach
     void setUp() {
@@ -34,7 +41,7 @@ class DeleteReviewTest {
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
 
         // Act
-        deleteReview.handle(1L);
+        reviewService.delete(1L);
 
         // Assert
         verify(reviewRepository, times(1)).delete(review);
@@ -46,7 +53,7 @@ class DeleteReviewTest {
         when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> deleteReview.handle(1L));
+        NullException exception = assertThrows(NullException.class, () -> reviewService.delete(1L));
         assertEquals("Review not found", exception.getMessage());
         verify(reviewRepository, never()).delete(any());
     }

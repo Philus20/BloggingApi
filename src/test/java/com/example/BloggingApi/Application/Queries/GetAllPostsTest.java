@@ -1,7 +1,9 @@
 package com.example.BloggingApi.Application.Queries;
 
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
+import com.example.BloggingApi.Services.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,8 +24,11 @@ class GetAllPostsTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
-    private GetAllPosts getAllPosts;
+    private PostService postService;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +43,7 @@ class GetAllPostsTest {
         when(postRepository.findAll(pageable)).thenReturn(postPage);
 
         // Act
-        Page<Post> result = getAllPosts.handle(pageable);
+        Page<Post> result = postService.getAll(pageable);
 
         // Assert
         assertNotNull(result);

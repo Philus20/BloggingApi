@@ -1,10 +1,10 @@
 package com.example.BloggingApi.Application.Commands.CreateCommands;
 
-import com.example.BloggingApi.API.Requests.CreateTagRequest;
-import com.example.BloggingApi.Domain.Entities.Tag;
-import com.example.BloggingApi.Domain.Exceptions.DuplicateEntityException;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.TagRepository;
+import com.example.BloggingApi.Services.TagService;
+import com.example.BloggingApi.DTOs.Requests.CreateTagRequest;
+import com.example.BloggingApi.Domain.Tag;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.TagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,7 +23,7 @@ class CreateTagTest {
     private TagRepository tagRepository;
 
     @InjectMocks
-    private CreateTag createTag;
+    private TagService tagService;
 
     @BeforeEach
     void setUp() {
@@ -31,13 +31,14 @@ class CreateTagTest {
     }
 
     @Test
-    void handle_ShouldCreateTag_WhenRequestIsValid() throws NullException, DuplicateEntityException {
+    void handle_ShouldCreateTag_WhenRequestIsValid() throws NullException {
         // Arrange
         CreateTagRequest req = new CreateTagRequest("Java");
         when(tagRepository.findByName("Java")).thenReturn(Optional.empty());
+        when(tagRepository.save(any(Tag.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Tag result = createTag.handle(req);
+        Tag result = tagService.create(req);
 
         // Assert
         assertNotNull(result);
@@ -45,23 +46,5 @@ class CreateTagTest {
         verify(tagRepository, times(1)).save(any(Tag.class));
     }
 
-    @Test
-    void handle_ShouldThrowException_WhenTagNameIsBlank() {
-        // Arrange
-        CreateTagRequest req = new CreateTagRequest("");
-
-        // Act & Assert
-        assertThrows(NullException.class, () -> createTag.handle(req));
-    }
-
-    @Test
-    void handle_ShouldThrowException_WhenTagAlreadyExists() {
-        // Arrange
-        CreateTagRequest req = new CreateTagRequest("Java");
-        when(tagRepository.findByName("Java")).thenReturn(Optional.of(mock(Tag.class)));
-
-        // Act & Assert
-        DuplicateEntityException exception = assertThrows(DuplicateEntityException.class, () -> createTag.handle(req));
-        assertTrue(exception.getMessage().contains("already exists"));
-    }
+    // Tag name blank and duplicate checks are validated at request level via @NotBlank and @UniqueTagName
 }

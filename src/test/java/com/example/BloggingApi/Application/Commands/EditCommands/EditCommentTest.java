@@ -1,9 +1,10 @@
 package com.example.BloggingApi.Application.Commands.EditCommands;
 
-import com.example.BloggingApi.API.Requests.EditCommentRequest;
-import com.example.BloggingApi.Domain.Entities.Comment;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
+import com.example.BloggingApi.Services.CommentService;
+import com.example.BloggingApi.DTOs.Requests.EditCommentRequest;
+import com.example.BloggingApi.Domain.Comment;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.CommentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,8 +21,14 @@ class EditCommentTest {
     @Mock
     private CommentRepository commentRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.PostRepository postRepository;
+
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
     @InjectMocks
-    private EditComment editComment;
+    private CommentService commentService;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +43,7 @@ class EditCommentTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
 
         // Act
-        Comment result = editComment.handle(request);
+        Comment result = commentService.update(request);
 
         // Assert
         assertNotNull(result);
@@ -50,6 +57,6 @@ class EditCommentTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(NullException.class, () -> editComment.handle(request));
+        assertThrows(NullException.class, () -> commentService.update(request));
     }
 }

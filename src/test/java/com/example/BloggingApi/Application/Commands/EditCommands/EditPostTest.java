@@ -1,9 +1,10 @@
 package com.example.BloggingApi.Application.Commands.EditCommands;
 
-import com.example.BloggingApi.API.Requests.EditPostRequest;
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
+import com.example.BloggingApi.Services.PostService;
+import com.example.BloggingApi.DTOs.Requests.EditPostRequest;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,8 +21,11 @@ class EditPostTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
     @InjectMocks
-    private EditPost editPost;
+    private PostService postService;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +40,7 @@ class EditPostTest {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
         // Act
-        Post result = editPost.handle(request);
+        Post result = postService.update(request);
 
         // Assert
         assertNotNull(result);
@@ -50,6 +54,6 @@ class EditPostTest {
         when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(NullException.class, () -> editPost.handle(request));
+        assertThrows(NullException.class, () -> postService.update(request));
     }
 }

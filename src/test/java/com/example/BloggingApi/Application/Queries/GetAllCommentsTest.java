@@ -1,7 +1,8 @@
 package com.example.BloggingApi.Application.Queries;
 
-import com.example.BloggingApi.Domain.Entities.Comment;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
+import com.example.BloggingApi.Domain.Comment;
+import com.example.BloggingApi.Repositories.CommentRepository;
+import com.example.BloggingApi.Services.CommentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,8 +23,14 @@ class GetAllCommentsTest {
     @Mock
     private CommentRepository commentRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.PostRepository postRepository;
+
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
     @InjectMocks
-    private GetAllComments getAllComments;
+    private CommentService commentService;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +45,7 @@ class GetAllCommentsTest {
         when(commentRepository.findAll(pageable)).thenReturn(commentPage);
 
         // Act
-        Page<Comment> result = getAllComments.handle(pageable);
+        Page<Comment> result = commentService.getAll(pageable);
 
         // Assert
         assertNotNull(result);

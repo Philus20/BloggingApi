@@ -1,18 +1,19 @@
 package com.example.BloggingApi.Application.Commands.CreateCommands;
 
-import com.example.BloggingApi.API.Requests.CreateCommentRequest;
-import com.example.BloggingApi.Domain.Entities.Comment;
-import com.example.BloggingApi.Domain.Entities.Post;
-import com.example.BloggingApi.Domain.Entities.User;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.PostRepository;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.example.BloggingApi.Services.CommentService;
+import com.example.BloggingApi.DTOs.Requests.CreateCommentRequest;
+import com.example.BloggingApi.Domain.Comment;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.CommentRepository;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CreateCommentTest {
 
     @Mock
@@ -32,12 +34,7 @@ class CreateCommentTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private CreateComment createComment;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private CommentService commentService;
 
     @Test
     void handle_ShouldCreateComment_WhenRequestIsValid() throws NullException {
@@ -48,9 +45,10 @@ class CreateCommentTest {
 
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userRepository.findById(1L)).thenReturn(Optional.of(author));
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        Comment result = createComment.handle(req);
+        Comment result = commentService.create(req);
 
         // Assert
         assertNotNull(result);
@@ -65,7 +63,7 @@ class CreateCommentTest {
         when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> createComment.handle(req));
+        NullException exception = assertThrows(NullException.class, () -> commentService.create(req));
         assertEquals("Post not found", exception.getMessage());
     }
 
@@ -77,7 +75,7 @@ class CreateCommentTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> createComment.handle(req));
+        NullException exception = assertThrows(NullException.class, () -> commentService.create(req));
         assertEquals("Author not found", exception.getMessage());
     }
 }

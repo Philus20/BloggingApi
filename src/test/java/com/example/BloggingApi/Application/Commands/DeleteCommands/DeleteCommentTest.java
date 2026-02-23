@@ -1,8 +1,9 @@
 package com.example.BloggingApi.Application.Commands.DeleteCommands;
 
-import com.example.BloggingApi.Domain.Entities.Comment;
-import com.example.BloggingApi.Domain.Exceptions.NullException;
-import com.example.BloggingApi.Infrastructure.Persistence.Repositories.CommentRepository;
+import com.example.BloggingApi.Services.CommentService;
+import com.example.BloggingApi.Domain.Comment;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.CommentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,8 +20,14 @@ class DeleteCommentTest {
     @Mock
     private CommentRepository commentRepository;
 
+    @Mock
+    private com.example.BloggingApi.Repositories.PostRepository postRepository;
+
+    @Mock
+    private com.example.BloggingApi.Repositories.UserRepository userRepository;
+
     @InjectMocks
-    private DeleteComment deleteComment;
+    private CommentService commentService;
 
     @BeforeEach
     void setUp() {
@@ -34,7 +41,7 @@ class DeleteCommentTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
 
         // Act
-        deleteComment.handle(1L);
+        commentService.delete(1L);
 
         // Assert
         verify(commentRepository, times(1)).delete(comment);
@@ -46,7 +53,7 @@ class DeleteCommentTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        NullException exception = assertThrows(NullException.class, () -> deleteComment.handle(1L));
+        NullException exception = assertThrows(NullException.class, () -> commentService.delete(1L));
         assertEquals("Comment not found", exception.getMessage());
         verify(commentRepository, never()).delete(any());
     }
