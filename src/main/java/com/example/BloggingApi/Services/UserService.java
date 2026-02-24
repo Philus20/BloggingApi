@@ -2,31 +2,58 @@ package com.example.BloggingApi.Services;
 
 import com.example.BloggingApi.DTOs.Requests.CreateUserRequest;
 import com.example.BloggingApi.DTOs.Requests.EditUserRequest;
+import com.example.BloggingApi.DTOs.Requests.LoginRequest;
 import com.example.BloggingApi.Domain.User;
 import com.example.BloggingApi.Exceptions.NullException;
 import com.example.BloggingApi.Repositories.UserRepository;
+import com.example.BloggingApi.Security.CustomUserDetailsService;
 import com.example.BloggingApi.Utils.PageableUtils;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    @Autowired
+    AuthenticationManager authenticationManager;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
     public User create(CreateUserRequest req) {
-        User user = User.create(req.username(), req.email(), req.password());
+
+        User user = User.create(req.username(), req.email(), passwordEncoder.encode(req.password()));
         return userRepository.save(user);
+    }
+
+
+    public boolean login(LoginRequest req) {
+
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                req.username(),
+                                req.password()
+                        )
+                );
+
+        return authentication.isAuthenticated();
     }
 
     @Transactional

@@ -2,6 +2,7 @@ package com.example.BloggingApi.Controllers.Rest;
 
 import com.example.BloggingApi.DTOs.Requests.CreateUserRequest;
 import com.example.BloggingApi.DTOs.Requests.EditUserRequest;
+import com.example.BloggingApi.DTOs.Requests.LoginRequest;
 import com.example.BloggingApi.DTOs.Responses.ApiResponse;
 import com.example.BloggingApi.DTOs.Responses.UserResponse;
 import com.example.BloggingApi.Services.UserService;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/v1")
+
 @Tag(name = "Users", description = "User CRUD and search")
 public class UserController {
 
@@ -53,11 +56,18 @@ public class UserController {
         return ApiResponse.success("Users search completed successfully", userService.search(keyword, username, email, page, size, sortBy, ascending).map(u -> new UserResponse(u.getId(), u.getUsername(), u.getEmail())));
     }
 
-    @PostMapping("/users")
+    @PostMapping("/register")
     @Operation(summary = "Create a new user")
     public ApiResponse<UserResponse> createUser(@RequestBody @jakarta.validation.Valid CreateUserRequest request) {
         var user = userService.create(request);
         return ApiResponse.success("User created successfully", new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
+    }
+
+
+    @PostMapping("/login")
+    @Operation(summary = "Create a new user")
+    public void loginUser(@RequestBody LoginRequest request) {
+       userService.login(request);
     }
 
     @PutMapping("/users")
