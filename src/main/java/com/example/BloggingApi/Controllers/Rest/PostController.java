@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,12 +23,14 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get post by ID")
     public ApiResponse<PostsResponse> getPostById(@Parameter(description = "Post ID") @PathVariable Long id) {
         return ApiResponse.success("Post retrieved successfully", PostsResponse.from(postService.getById(id)));
     }
 
     @GetMapping("/posts")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all posts", description = "Paginated list with optional sorting")
     public ApiResponse<Page<PostsResponse>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
@@ -39,6 +42,7 @@ public class PostController {
     }
 
     @GetMapping("/posts/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search posts", description = "Search by keyword, title, or author")
     public ApiResponse<Page<PostsResponse>> searchPosts(
             @RequestParam(required = false) String keyword,
@@ -53,18 +57,21 @@ public class PostController {
     }
 
     @PostMapping("/posts")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new post")
     public ApiResponse<PostsResponse> createPost(@RequestBody @jakarta.validation.Valid CreatePostRequest request) {
         return ApiResponse.success("Success", PostsResponse.from(postService.create(request)));
     }
 
     @PutMapping("/posts")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a post")
     public ApiResponse<PostsResponse> editPost(@RequestBody @jakarta.validation.Valid EditPostRequest request) {
         return ApiResponse.success("Success", PostsResponse.from(postService.update(request)));
     }
 
     @DeleteMapping("/posts/{id}")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a post")
     public ApiResponse<Void> deletePost(@Parameter(description = "Post ID") @PathVariable Long id) {
         postService.delete(id);

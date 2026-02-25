@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,12 +23,14 @@ public class CommentController {
     }
 
     @GetMapping("/comments/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get comment by ID")
     public ApiResponse<CommentResponse> getCommentById(@Parameter(description = "Comment ID") @PathVariable Long id) {
         return ApiResponse.success("Comment retrieved successfully", CommentResponse.from(commentService.getById(id)));
     }
 
     @GetMapping("/comments")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all comments", description = "Paginated list with optional sorting")
     public ApiResponse<Page<CommentResponse>> getAllComments(
             @RequestParam(defaultValue = "0") int page,
@@ -39,6 +42,7 @@ public class CommentController {
     }
 
     @GetMapping("/comments/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search comments", description = "Search by content or author")
     public ApiResponse<Page<CommentResponse>> searchComments(
             @RequestParam(required = false) String content,
@@ -52,18 +56,21 @@ public class CommentController {
     }
 
     @PostMapping("/comments")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new comment")
     public ApiResponse<CommentResponse> createComment(@RequestBody @jakarta.validation.Valid CreateCommentRequest request) {
         return ApiResponse.success("Comment created successfully", CommentResponse.from(commentService.create(request)));
     }
 
     @PutMapping("/comments")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a comment")
     public ApiResponse<CommentResponse> editComment(@RequestBody @jakarta.validation.Valid EditCommentRequest request) {
         return ApiResponse.success("Comment updated successfully", CommentResponse.from(commentService.update(request)));
     }
 
     @DeleteMapping("/comments/{id}")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a comment")
     public ApiResponse<Void> deleteComment(@Parameter(description = "Comment ID") @PathVariable Long id) {
         commentService.delete(id);

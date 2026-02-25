@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,12 +23,14 @@ public class TagController {
     }
 
     @GetMapping("/tags/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get tag by ID")
     public ApiResponse<TagResponse> getTagById(@Parameter(description = "Tag ID") @PathVariable Long id) {
         return ApiResponse.success("Tag retrieved successfully", TagResponse.from(tagService.getById(id)));
     }
 
     @GetMapping("/tags")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all tags", description = "Paginated list with optional sorting")
     public ApiResponse<Page<TagResponse>> getAllTags(
             @RequestParam(defaultValue = "0") int page,
@@ -39,6 +42,7 @@ public class TagController {
     }
 
     @GetMapping("/tags/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search tags by name")
     public ApiResponse<Page<TagResponse>> searchTags(
             @RequestParam(required = true) String name,
@@ -51,18 +55,21 @@ public class TagController {
     }
 
     @PostMapping("/tags")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new tag")
     public ApiResponse<TagResponse> createTag(@RequestBody @jakarta.validation.Valid CreateTagRequest request) {
         return ApiResponse.success("Tag created successfully", TagResponse.from(tagService.create(request)));
     }
 
     @PutMapping("/tags")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a tag")
     public ApiResponse<TagResponse> editTag(@RequestBody @jakarta.validation.Valid EditTagRequest request) {
         return ApiResponse.success("Tag updated successfully", TagResponse.from(tagService.update(request)));
     }
 
     @DeleteMapping("/tags/{id}")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a tag")
     public ApiResponse<Void> deleteTag(@Parameter(description = "Tag ID") @PathVariable Long id) {
         tagService.delete(id);

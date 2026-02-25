@@ -15,6 +15,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByUsername(String username);
 
+    /** Case-insensitive lookup for login (e.g. "king" matches "King"). */
+    Optional<User> findByUsernameIgnoreCase(String username);
+
     Optional<User> findByEmailIgnoreCase(String email);
 
     // Search by username (uses idx_user_username index)

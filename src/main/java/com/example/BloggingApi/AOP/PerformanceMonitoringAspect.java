@@ -30,7 +30,7 @@ public class PerformanceMonitoringAspect {
         long end = System.currentTimeMillis();
         long duration = end - start;
 
-        logger.info("⏱️ Method {} executed in {} ms", joinPoint.getSignature(), duration);
+        logger.info("Method {} executed in {} ms", joinPoint.getSignature(), duration);
 
         return result;
     }

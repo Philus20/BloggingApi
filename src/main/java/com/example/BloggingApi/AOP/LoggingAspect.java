@@ -22,7 +22,7 @@ public class LoggingAspect {
     @Before("serviceLayer()")
     public void logBeforeServiceMethods(JoinPoint joinPoint) {
         logger.info("A method in the service layer is about to be executed.");
-        logger.info("➡️ Entering method: {}", joinPoint.getSignature());
+        logger.info(" Entering method: {}", joinPoint.getSignature());
 
     }
 
