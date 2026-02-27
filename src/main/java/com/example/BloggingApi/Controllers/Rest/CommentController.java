@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class CommentController {
     }
 
     @GetMapping("/comments/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get comment by ID")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment found"),
@@ -35,6 +37,7 @@ public class CommentController {
     }
 
     @GetMapping("/comments")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all comments", description = "Paginated list with optional sorting")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comments retrieved"),
@@ -50,6 +53,7 @@ public class CommentController {
     }
 
     @GetMapping("/comments/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search comments", description = "Search by content or author")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search results returned"),
@@ -67,6 +71,7 @@ public class CommentController {
     }
 
     @PostMapping("/comments")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new comment")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment created"),
@@ -78,6 +83,7 @@ public class CommentController {
     }
 
     @PutMapping("/comments")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a comment")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment updated"),
@@ -89,6 +95,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/comments/{id}")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a comment")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment deleted"),

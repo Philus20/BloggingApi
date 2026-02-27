@@ -22,7 +22,7 @@ public class JWTService {
 
     private static final int HMAC_SHA256_MIN_BYTES = 32;
 
-    @Value("${app.jwt.secret:BloggingApiJwtSecretKeyForSigningMustBeAtLeast32BytesLong}")
+    @Value("${app.jwt.secret:defaultsecret}")
     private String secret;
 
     @Value("${app.jwt.expiration-ms:3600000}")

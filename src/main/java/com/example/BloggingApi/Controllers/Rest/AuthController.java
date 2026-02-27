@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,6 +64,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Logout", description = "Revoke the current Bearer token. Token is blacklisted.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Logged out successfully"),

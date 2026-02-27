@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get user by ID")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User found"),
@@ -36,6 +38,7 @@ public class UserController {
     }
 
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all users", description = "Paginated list with optional sorting")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users retrieved"),
@@ -51,6 +54,7 @@ public class UserController {
     }
 
     @GetMapping("/users/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search users", description = "Search by keyword, username, or email")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search results returned"),
@@ -68,19 +72,10 @@ public class UserController {
         return ApiResponse.success("Users search completed successfully", userService.search(keyword, username, email, page, size, sortBy, ascending).map(u -> new UserResponse(u.getId(), u.getUsername(), u.getEmail())));
     }
 
-    @PostMapping("/users")
-    @Operation(summary = "Create a new user")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User created"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed (blank username, invalid email, weak password)"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Username or email already exists")
-    })
-    public ApiResponse<UserResponse> createUser(@RequestBody @jakarta.validation.Valid CreateUserRequest request) {
-        var user = userService.create(request);
-        return ApiResponse.success("User created successfully", new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
-    }
+
 
     @PutMapping("/users")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a user")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User updated"),
@@ -94,6 +89,7 @@ public class UserController {
     }
 
     @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a user")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User deleted"),

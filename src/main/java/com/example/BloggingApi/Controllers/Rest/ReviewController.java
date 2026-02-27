@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class ReviewController {
     }
 
     @GetMapping("/reviews/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get review by ID")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Review found"),
@@ -50,6 +52,7 @@ public class ReviewController {
     }
 
     @GetMapping("/reviews/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search reviews", description = "Search by comment, rating, or author")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search results returned"),
@@ -68,6 +71,7 @@ public class ReviewController {
     }
 
     @PostMapping("/reviews")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new review")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Review created"),
@@ -79,6 +83,7 @@ public class ReviewController {
     }
 
     @PutMapping("/reviews")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a review")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Review updated"),
@@ -90,6 +95,7 @@ public class ReviewController {
     }
 
     @DeleteMapping("/reviews/{id}")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a review")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Review deleted"),

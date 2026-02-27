@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id}")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get post by ID")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Post found"),
@@ -35,6 +37,7 @@ public class PostController {
     }
 
     @GetMapping("/posts")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all posts", description = "Paginated list with optional sorting")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Posts retrieved"),
@@ -50,6 +53,7 @@ public class PostController {
     }
 
     @GetMapping("/posts/search")
+    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search posts", description = "Search by keyword, title, or author")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search results returned"),
@@ -68,6 +72,7 @@ public class PostController {
     }
 
     @PostMapping("/posts")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new post")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Post created"),
@@ -79,6 +84,7 @@ public class PostController {
     }
 
     @PutMapping("/posts")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a post")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Post updated"),
@@ -90,6 +96,7 @@ public class PostController {
     }
 
     @DeleteMapping("/posts/{id}")
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a post")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Post deleted"),
