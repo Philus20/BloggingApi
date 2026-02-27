@@ -16,10 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Loads user from Google OAuth2 and persists or updates our User entity.
- * New OAuth2 users get role READER automatically.
- */
+// Handles Google login — creates a local User if they're new
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
@@ -60,7 +57,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     return userRepository.save(newUser);
                 });
 
-        // Ensure our DB user's username is in attributes so we can resolve later
+        // Stash our DB fields so the success handler can find them
         attributes.put("dbUserId", user.getId());
         attributes.put("dbUsername", user.getUsername());
         attributes.put("dbEmail", user.getEmail());

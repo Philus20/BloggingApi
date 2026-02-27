@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Admin-only endpoints for security event reports and token/session tracking (Epic 5, User Story 5.2).
- */
+// Admin dashboards for auth events and active sessions
 @RestController
 @RequestMapping("/api/v1/admin/security")
 @PreAuthorize("hasRole('ADMIN')")

@@ -40,7 +40,6 @@ public class Tag {
         }
     }
 
-    // Getters
     public Long getId() {
         return id;
     }

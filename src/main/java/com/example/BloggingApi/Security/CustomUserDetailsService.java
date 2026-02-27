@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             role = "READER";
         } else {
             role = role.trim().toUpperCase();
-            if ("GENERAL".equals(role)) {
+            if ("GENERAL".equals(role) || "USER".equals(role)) {
                 role = "READER";
             }
         }

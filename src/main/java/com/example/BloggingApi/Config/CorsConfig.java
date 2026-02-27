@@ -11,10 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Global CORS configuration so that external clients (e.g. React, JavaFX) can interact
- * safely with the API. Unauthorized origins receive 403.
- */
+// CORS setup — allowed origins, methods, headers all come from application.properties
 @Configuration
 public class CorsConfig {
 
@@ -30,10 +27,6 @@ public class CorsConfig {
     @Value("${app.cors.max-age:3600}")
     private long maxAge;
 
-    /**
-     * CORS configuration source used by Spring Security. Only requests from allowed
-     * origins receive CORS headers; others are handled by the filter below.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -48,9 +41,7 @@ public class CorsConfig {
         return source;
     }
 
-    /**
-     * Returns the list of allowed origins (used by the filter to reject others with 403).
-     */
+    // Shared with CorsOriginFilter
     @Bean("corsAllowedOriginsList")
     public List<String> corsAllowedOriginsList() {
         return parseCommaSeparated(allowedOriginsConfig);

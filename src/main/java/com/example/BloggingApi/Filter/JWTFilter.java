@@ -28,9 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-/**
- * Validates JWT on each protected request. Expired or tampered tokens receive 401 Unauthorized.
- */
+// Checks the Bearer token on every request
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 

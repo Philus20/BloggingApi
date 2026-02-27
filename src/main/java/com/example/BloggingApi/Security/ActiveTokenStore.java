@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * In-memory map of active token sessions (jti -> session info) for tracking and reporting.
- * Updated on login (add) and logout (remove).
- */
+// Keeps track of which tokens are currently in use
 @Component
 public class ActiveTokenStore {
 
@@ -30,7 +27,6 @@ public class ActiveTokenStore {
         }
     }
 
-    /** Returns a snapshot of currently tracked active sessions (for reporting). */
     public List<SessionInfo> getAll() {
         return new ArrayList<>(active.values());
     }

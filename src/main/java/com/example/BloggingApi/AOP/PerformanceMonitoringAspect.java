@@ -15,22 +15,19 @@ public class PerformanceMonitoringAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(PerformanceMonitoringAspect.class);
 
-    // Pointcut: all classes in Queries package
     @Pointcut("within(com.example.BloggingApi.Services..*)")
     public void monitoredMethods() {}
 
-    // Around advice
     @Around("monitoredMethods()")
     public Object measureExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
 
-        // Run the actual method
         Object result = joinPoint.proceed();
 
         long end = System.currentTimeMillis();
         long duration = end - start;
 
-        logger.info("Method {} executed in {} ms", joinPoint.getSignature(), duration);
+        logger.info(" Method {} executed in {} ms", joinPoint.getSignature(), duration);
 
         return result;
     }

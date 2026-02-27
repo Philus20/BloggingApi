@@ -11,10 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * In-memory security event store and login attempt tracking for auditing and brute-force detection.
- * Events are logged and kept in a bounded list for reports.
- */
+// Tracks login attempts and security events in memory
 @Service
 public class SecurityEventService {
 
@@ -24,8 +21,7 @@ public class SecurityEventService {
         LOGIN_SUCCESS,
         LOGIN_FAILURE,
         TOKEN_REVOKED,
-        TOKEN_REJECTED,
-        REQUEST_AUTHENTICATED
+        TOKEN_REJECTED
     }
 
     public record SecurityEvent(EventType type, String username, String details, long timestampMs) {
@@ -38,7 +34,6 @@ public class SecurityEventService {
     private final List<SecurityEvent> recentEvents = new ArrayList<>();
     private final Object eventsLock = new Object();
 
-    /** Failed login count per username; expiry handled by cleanup. */
     private final Map<String, AtomicLong> failureCountByUser = new ConcurrentHashMap<>();
     private static final int BRUTE_FORCE_THRESHOLD = 5;
     private static final long BRUTE_FORCE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -70,11 +65,7 @@ public class SecurityEventService {
         log.info("SECURITY_TOKEN revoked username={} jti={}", username, jti);
     }
 
-    public void logRequestAuthenticated(String username, String method, String path) {
-        addEvent(EventType.REQUEST_AUTHENTICATED, username, method + " " + path);
-    }
-
-    /** Returns true if the username should be blocked due to too many recent failures. */
+    // Too many failed attempts within the window?
     public boolean isBlocked(String username) {
         if (username == null || username.isBlank()) return false;
         long now = System.currentTimeMillis();

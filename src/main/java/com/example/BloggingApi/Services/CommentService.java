@@ -10,7 +10,9 @@ import com.example.BloggingApi.Repositories.CommentRepository;
 import com.example.BloggingApi.Repositories.PostRepository;
 import com.example.BloggingApi.Repositories.UserRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class CommentService {
     }
 
     @Transactional
+    @CacheEvict(value = "comments", allEntries = true)
     public Comment create(CreateCommentRequest req) {
         Post post = postRepository.findById(req.postId())
                 .orElseThrow(() -> new NullException("Post not found"));
@@ -39,37 +42,36 @@ public class CommentService {
     }
 
     @Transactional
+    @CacheEvict(value = "comments", allEntries = true)
     public Comment update(EditCommentRequest request) {
-        Comment comment = commentRepository.findById(request.id())
+        Comment comment = commentRepository.findByIdWithRelations(request.id())
                 .orElseThrow(() -> new NullException("Comment not found"));
         comment.update(request.content());
         return comment;
     }
 
     @Transactional
+    @CacheEvict(value = "comments", allEntries = true)
     public void delete(Long id) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NullException("Comment not found"));
         commentRepository.delete(comment);
     }
 
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "comments", key = "#id")
     public Comment getById(Long id) {
-        return commentRepository.findById(id)
+        return commentRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new NullException("Comment not found"));
     }
 
+    @Transactional(readOnly = true)
     public Page<Comment> getAll(Pageable pageable) {
         return commentRepository.findAll(pageable);
     }
 
-    public Page<Comment> searchByContent(String content, Pageable pageable) {
-        return commentRepository.findByContentContainingIgnoreCase(content, pageable);
-    }
-
-    public Page<Comment> searchByAuthor(String username, Pageable pageable) {
-        return commentRepository.findByAuthorUsernameContainingIgnoreCase(username, pageable);
-    }
-
+    @Transactional(readOnly = true)
     public Page<Comment> search(String content, String author, Pageable pageable) {
         if (content != null && !content.isBlank()) {
             return commentRepository.findByContentContainingIgnoreCase(content, pageable);
@@ -80,15 +82,20 @@ public class CommentService {
         throw new IllegalArgumentException("Please provide at least one search parameter: content or author");
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "comments")
     public Page<Comment> getAll(int page, int size, String sortBy, boolean ascending) {
         return getAll(PageableUtils.create(page, size, sortBy, ascending));
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "comments")
     public Page<Comment> search(String content, String author, int page, int size, String sortBy, boolean ascending) {
         return search(content, author, PageableUtils.create(page, size, sortBy, ascending));
     }
 
-    /** Search with optional criteria; returns empty page when no criteria provided. */
+    @Transactional(readOnly = true)
+    @Cacheable(value = "comments")
     public Page<Comment> searchOptional(String content, String author, int page, int size, String sortBy, boolean ascending) {
         Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);
         if (content != null && !content.isBlank()) {

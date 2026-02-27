@@ -48,7 +48,6 @@ public class Review {
         this.comment = comment;
     }
 
-    // Getters
     public Long getId() {
         return id;
     }

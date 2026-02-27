@@ -8,7 +8,7 @@ import com.example.BloggingApi.Exceptions.NullException;
 import com.example.BloggingApi.Repositories.PostRepository;
 import com.example.BloggingApi.Repositories.UserRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -38,7 +38,7 @@ public class PostService {
     @Transactional
     @CacheEvict(value = "posts", allEntries = true)
     public Post update(EditPostRequest request) {
-        Post post = postRepository.findById(request.id())
+        Post post = postRepository.findByIdWithAuthor(request.id())
                 .orElseThrow(() -> new NullException("Post not found"));
         post.update(request.title(), request.content());
         return post;
@@ -52,28 +52,19 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "posts", key = "#id")
     public Post getById(Long id) {
-        return postRepository.findById(id)
+        return postRepository.findByIdWithAuthor(id)
                 .orElseThrow(() -> new NullException("Post not found"));
     }
 
+    @Transactional(readOnly = true)
     public Page<Post> getAll(Pageable pageable) {
         return postRepository.findAll(pageable);
     }
 
-    public Page<Post> searchByKeyword(String keyword, Pageable pageable) {
-        return postRepository.searchByKeyword(keyword, pageable);
-    }
-
-    public Page<Post> searchByTitle(String title, Pageable pageable) {
-        return postRepository.findByTitleContainingIgnoreCase(title, pageable);
-    }
-
-    public Page<Post> searchByAuthor(String username, Pageable pageable) {
-        return postRepository.findByAuthorUsernameContainingIgnoreCase(username, pageable);
-    }
-
+    @Transactional(readOnly = true)
     public Page<Post> search(String keyword, String title, String author, Pageable pageable) {
         if (keyword != null && !keyword.isBlank()) {
             return postRepository.searchByKeyword(keyword, pageable);
@@ -87,15 +78,20 @@ public class PostService {
         throw new IllegalArgumentException("Please provide at least one search parameter: keyword, title, or author");
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "posts")
     public Page<Post> getAll(int page, int size, String sortBy, boolean ascending) {
         return getAll(PageableUtils.create(page, size, sortBy, ascending));
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "posts")
     public Page<Post> search(String keyword, String title, String author, int page, int size, String sortBy, boolean ascending) {
         return search(keyword, title, author, PageableUtils.create(page, size, sortBy, ascending));
     }
 
-    /** Search with optional criteria; returns empty page when no criteria provided. */
+    @Transactional(readOnly = true)
+    @Cacheable(value = "posts")
     public Page<Post> searchOptional(String keyword, String title, String author, int page, int size, String sortBy, boolean ascending) {
         Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);
         if (keyword != null && !keyword.isBlank()) {

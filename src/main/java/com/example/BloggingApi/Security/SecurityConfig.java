@@ -45,7 +45,7 @@ public class SecurityConfig {
         this.oauth2LoginSuccessHandler = oauth2LoginSuccessHandler;
     }
 
-    /** Demo chain: CSRF enabled for form-based /demo/** (see docs/CSRF-AND-SESSION-SECURITY.md). */
+    // CSRF demo chain for /demo/**
     @Bean
     @Order(1)
     public SecurityFilterChain demoCsrfFilterChain(HttpSecurity http) throws Exception {
@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .build();
     }
 
-    /** OAuth2 (Google) login: session-based flow; user details persisted, JWT issued on success redirect. */
+    // Google OAuth2 login chain
     @Bean
     @Order(2)
     public SecurityFilterChain oauth2FilterChain(HttpSecurity http) throws Exception {
@@ -77,19 +77,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                // CSRF disabled for stateless JWT API: auth is via Bearer token, not cookies/session.
-                // Browsers do not send custom headers cross-site, so CSRF adds no benefit here.
-                // See docs/CSRF-AND-SESSION-SECURITY.md for when to enable CSRF (stateful sessions, forms).
+                // No CSRF needed — stateless JWT, no cookies
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Public: login and registration (no authentication required)
+                        // Public endpoints
                         .requestMatchers(HttpMethod.POST, API_V1 + "/login", API_V1 + "/register", API_V1 + "/auth/login").permitAll()
-                        // API docs and Swagger UI (optional: restrict in production)
+                        // Swagger
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                        // Admin-only: user deletion and future admin endpoints
+                        // Admin only
                         .requestMatchers(API_V1 + "/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, API_V1 + "/users/**").hasRole("ADMIN")
-                        // Author or Admin: create/update/delete content (posts, comments, tags, reviews)
+                        // Author or Admin — write operations
                         .requestMatchers(HttpMethod.POST, API_V1 + "/posts", API_V1 + "/posts/**").hasAnyRole("AUTHOR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, API_V1 + "/posts/**").hasAnyRole("AUTHOR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, API_V1 + "/posts/**").hasAnyRole("AUTHOR", "ADMIN")
@@ -102,7 +100,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, API_V1 + "/reviews", API_V1 + "/reviews/**").hasAnyRole("AUTHOR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, API_V1 + "/reviews/**").hasAnyRole("AUTHOR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, API_V1 + "/reviews/**").hasAnyRole("AUTHOR", "ADMIN")
-                        // Reader (and above): all GET and user update require authentication
+                        // Everything else needs auth
                         .requestMatchers(API_V1 + "/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -114,7 +112,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /** Build AuthenticationManager explicitly to avoid circular dependency from AuthenticationConfiguration. */
+    // Explicit bean to avoid circular dependency
     @Bean
     public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();

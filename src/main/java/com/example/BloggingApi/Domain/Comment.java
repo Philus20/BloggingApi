@@ -49,7 +49,6 @@ public Comment() {}
         }
     }
 
-    // Getters
     public Long getId() {
         return id;
     }

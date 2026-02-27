@@ -4,7 +4,8 @@ A Spring Boot blogging API with REST and GraphQL support, Spring Data JPA, cachi
 
 ## Tech Stack
 
-- **Java 21** · **Spring Boot 3.2**
+- **Java 21** · **Spring Boot 3.x**
+- **Spring Security** – JWT authentication, Google OAuth2, RBAC
 - **Spring Data JPA** – Repositories, pagination, sorting
 - **PostgreSQL** – Database
 - **Spring Cache** – Caching for posts, users, tags
@@ -18,13 +19,18 @@ A Spring Boot blogging API with REST and GraphQL support, Spring Data JPA, cachi
 
 ```
 src/main/java/com/example/BloggingApi/
-├── Config/           # Cache, security, etc.
-├── Controllers/      # REST and GraphQL controllers
+├── AOP/              # Logging and performance aspects
+├── Config/           # CORS, cache, password encoder
+├── Controllers/
+│   ├── Rest/         # REST controllers (Auth, User, Post, Comment, Tag, Review, SecurityReport)
+│   └── Graphql/      # GraphQL controllers
 ├── Domain/           # JPA entities (User, Post, Comment, Tag, Review)
-├── DTOs/             # Requests and Responses
+├── DTOs/             # Requests, Responses, and Validation annotations
 ├── Exceptions/       # Custom exceptions + GlobalExceptionHandler
+├── Filter/           # JWTFilter, CorsOriginFilter
 ├── Repositories/     # Spring Data JPA repositories
-└── Services/         # Business logic (PostService, CommentService, etc.)
+├── Security/         # SecurityConfig, JWTService, OAuth2, RBAC, token stores, event tracking
+└── Services/         # Business logic (UserService, PostService, etc.)
 ```
 
 ---
@@ -93,9 +99,52 @@ All repositories extend `JpaRepository<Entity, Long>`:
 
 ---
 
+## Authentication & Authorization
+
+### JWT login
+
+1. `POST /api/v1/auth/login` with `{ "username": "...", "password": "..." }`
+2. Response includes a signed JWT (HMAC SHA-256) with claims: `sub` (username), `iat`, `exp`, `role`, `email`, `jti`.
+3. Send the token on subsequent requests: `Authorization: Bearer <token>`
+4. Expired / tampered / revoked tokens get **401**.
+5. Too many failed logins (5 in 5 min) get **429**.
+
+### Google OAuth2
+
+- Start at `/oauth2/authorization/google` (browser redirect flow).
+- On success the server creates or looks up the user, issues a JWT, and returns JSON with the token.
+- New OAuth2 users default to role **READER**.
+
+### Logout
+
+`POST /api/v1/auth/logout` with the Bearer token. The token's `jti` is added to an in-memory blacklist (`RevokedTokenStore`) and removed from `ActiveTokenStore`.
+
+### Roles (RBAC)
+
+| Role | Can do |
+|------|--------|
+| **READER** | GET any resource |
+| **AUTHOR** | Everything READER can, plus POST/PUT/DELETE posts, comments, tags, reviews |
+| **ADMIN** | Everything AUTHOR can, plus DELETE users and access `/api/v1/admin/**` |
+
+Enforced in `SecurityConfig` via URL-based rules and with `@PreAuthorize` on admin endpoints.
+
+### Password storage
+
+Passwords are hashed with **BCrypt** (`PasswordEncoderConfig`). Plain text is never stored.
+
+---
+
 ## API Endpoints
 
-### REST
+### Auth
+
+- `POST /api/v1/auth/login` – get a JWT
+- `POST /api/v1/auth/logout` – revoke current token
+- `GET /api/v1/admin/security/events` – recent auth events (ADMIN)
+- `GET /api/v1/admin/security/sessions` – active sessions (ADMIN)
+
+### REST (all under `/api/v1`)
 
 - `GET/POST /posts`, `GET/PUT/DELETE /posts/{id}`, `GET /posts/search`
 - `GET/POST /comments`, `GET/PUT/DELETE /comments/{id}`, `GET /comments/search`
@@ -164,41 +213,26 @@ Entity indexes used by queries and sorting:
 
 ---
 
-## Security: CORS and CSRF
-
-The API uses **JWT** in the `Authorization` header for authentication (stateless). **CORS** and **CSRF** are configured as follows so that browser and API clients work correctly.
-
-### CORS vs CSRF (short)
+## CORS vs CSRF
 
 | | CORS | CSRF |
 |---|------|------|
-| **Purpose** | Controls which **origins** can call the API from the browser and with which methods/headers. | Prevents a malicious site from forging **state-changing requests** using the user’s **cookies/session**. |
-| **Enforced by** | Browser (using server response headers). | Server (validates a CSRF token). |
-| **This API** | Configured in `Config.CorsConfig`; allowed origins/methods/headers are configurable. Unauthorized origins get **403**. | **Disabled** for the JWT API (auth is Bearer token, not cookies). **Enabled** only for the demo form under `/demo/**` to demonstrate the token mechanism. |
+| **What it does** | Controls which origins can call the API from a browser | Prevents a malicious site from forging requests using a victim's cookies/session |
+| **Enforced by** | Browser (reads server response headers) | Server (validates a token on state-changing requests) |
+| **This API** | Configured in `CorsConfig`; unknown origins get 403 via `CorsOriginFilter` | Disabled for JWT endpoints (no cookies involved); enabled on `/demo/**` for the form demo |
 
-### Why CSRF is disabled for the JWT API
+**When you need CSRF:** any time auth relies on cookies or server sessions (login forms, traditional web apps). The browser sends those credentials automatically, so an attacker can trick it into making requests on behalf of the user.
 
-- Authentication is via **Bearer token**, not cookies. Browsers do not send custom headers cross-site, so an attacker cannot forge a request that carries the user’s JWT. CSRF protection adds no benefit for these endpoints.
+**When you don't:** stateless JWT APIs like this one. The `Authorization: Bearer` header is never sent automatically by the browser, so there's nothing to forge.
 
-### When to enable CSRF
-
-- Enable CSRF when using **server-side sessions** or **cookie-based auth**, or when accepting **form submissions** from the browser. See [docs/CSRF-AND-SESSION-SECURITY.md](docs/CSRF-AND-SESSION-SECURITY.md) for details and for a **demo form** at `/demo/csrf-form` that uses a CSRF token.
-
-### Practical tests
-
-- **Postman**: No `Origin` header by default, so CORS does not apply; use `Authorization: Bearer <token>` for protected API calls. For the demo, `POST /demo/csrf-submit` without `_csrf` returns **403**; with a valid token (from GET `/demo/csrf-form`) it returns **200**.
-- **Browser**: Open `http://localhost:8080/demo/csrf-form`, submit the form → **200**. Cross-origin calls to the API require the origin to be in the CORS allowed list.
-
-Full technical explanation, when to enable CSRF, and the CORS vs CSRF interaction are in **[docs/CSRF-AND-SESSION-SECURITY.md](docs/CSRF-AND-SESSION-SECURITY.md)**.
+Full details, demo walkthrough, and a Postman/browser test matrix: [docs/CSRF-AND-SESSION-SECURITY.md](docs/CSRF-AND-SESSION-SECURITY.md)
 
 ---
 
 ## Documentation
 
+- **DSA & Security Optimization**: [docs/DSA-AND-SECURITY-OPTIMIZATION.md](docs/DSA-AND-SECURITY-OPTIMIZATION.md)
+- **CSRF & Session Security**: [docs/CSRF-AND-SESSION-SECURITY.md](docs/CSRF-AND-SESSION-SECURITY.md)
 - **GraphQL**: [docs/GRAPHQL-GUIDE.md](docs/GRAPHQL-GUIDE.md)
-- **Login & security**: [docs/LOGIN-AND-SECURITY.md](docs/LOGIN-AND-SECURITY.md)
-- **CSRF and session security, CORS vs CSRF**: [docs/CSRF-AND-SESSION-SECURITY.md](docs/CSRF-AND-SESSION-SECURITY.md)
-- **OAuth2 (Google) and RBAC**: [docs/OAUTH2-AND-RBAC.md](docs/OAUTH2-AND-RBAC.md)
-- **DSA and security optimization**: [docs/DSA-AND-SECURITY-OPTIMIZATION.md](docs/DSA-AND-SECURITY-OPTIMIZATION.md)
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html` – interactive API explorer
 - **OpenAPI JSON**: `http://localhost:8080/v3/api-docs` – raw spec

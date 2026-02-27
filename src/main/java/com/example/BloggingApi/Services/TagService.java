@@ -6,7 +6,7 @@ import com.example.BloggingApi.Domain.Tag;
 import com.example.BloggingApi.Exceptions.NullException;
 import com.example.BloggingApi.Repositories.TagRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -46,29 +46,37 @@ public class TagService {
         tagRepository.delete(tag);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "tags", key = "#id")
     public Tag getById(Long id) {
         return tagRepository.findById(id)
                 .orElseThrow(() -> new NullException("Tag not found"));
     }
 
+    @Transactional(readOnly = true)
     public Page<Tag> getAll(Pageable pageable) {
         return tagRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
     public Page<Tag> searchByName(String name, Pageable pageable) {
         return tagRepository.findByNameContainingIgnoreCase(name, pageable);
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "tags")
     public Page<Tag> getAll(int page, int size, String sortBy, boolean ascending) {
         return getAll(PageableUtils.create(page, size, sortBy, ascending));
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "tags")
     public Page<Tag> searchByName(String name, int page, int size, String sortBy, boolean ascending) {
         return searchByName(name, PageableUtils.create(page, size, sortBy, ascending));
     }
 
-    /** Search by name; returns empty page when name is null or blank. */
+    @Transactional(readOnly = true)
+    @Cacheable(value = "tags")
     public Page<Tag> searchOptional(String name, int page, int size, String sortBy, boolean ascending) {
         Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);
         if (name != null && !name.isBlank()) {

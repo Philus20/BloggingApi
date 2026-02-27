@@ -32,12 +32,10 @@ public class Post {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // MANY posts → ONE user
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private User author;
 
-    // ONE post → MANY comments
     @OneToMany(
             mappedBy = "post",
             cascade = CascadeType.ALL,
@@ -45,7 +43,6 @@ public class Post {
     )
     private List<Comment> comments = new ArrayList<>();
 
-    // MANY posts ↔ MANY tags
     @ManyToMany
     @JoinTable(
             name = "post_tags",
@@ -55,7 +52,7 @@ public class Post {
     private Set<Tag> tags = new HashSet<>();
 
     public Post() {}
-    // This constructor allows create() to work
+
     private Post(String title, String content, User author) {
         this.title = title;
         this.content = content;

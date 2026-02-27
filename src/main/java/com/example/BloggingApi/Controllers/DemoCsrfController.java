@@ -10,19 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Demo endpoints for CSRF token mechanism (Epic 3, User Story 3.1).
- * These paths are protected by a separate SecurityFilterChain with CSRF enabled.
- * See docs/CSRF-AND-SESSION-SECURITY.md.
- */
+// Quick demo to show CSRF protection in action
 @RestController
 @RequestMapping("/demo")
 public class DemoCsrfController {
 
-    /**
-     * Returns an HTML form that includes the CSRF token. Submitting the form
-     * demonstrates that the server validates the token on POST.
-     */
     @GetMapping(value = "/csrf-form", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> csrfForm(HttpServletRequest request) {
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
@@ -50,10 +42,6 @@ public class DemoCsrfController {
         return ResponseEntity.ok().body(html);
     }
 
-    /**
-     * Accepts form submission with message and _csrf. Spring Security validates
-     * the CSRF token automatically; missing or invalid token returns 403.
-     */
     @PostMapping(value = "/csrf-submit", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> csrfSubmit(@RequestParam(defaultValue = "") String message) {
         return ResponseEntity.ok()

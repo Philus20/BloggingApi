@@ -7,12 +7,13 @@ import com.example.BloggingApi.DTOs.Responses.CommentResponse;
 import com.example.BloggingApi.Services.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/v1")
 @Tag(name = "Comments", description = "Comment CRUD and search")
 public class CommentController {
 
@@ -23,15 +24,22 @@ public class CommentController {
     }
 
     @GetMapping("/comments/{id}")
-    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get comment by ID")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Comment not found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid ID format")
+    })
     public ApiResponse<CommentResponse> getCommentById(@Parameter(description = "Comment ID") @PathVariable Long id) {
         return ApiResponse.success("Comment retrieved successfully", CommentResponse.from(commentService.getById(id)));
     }
 
     @GetMapping("/comments")
-    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Get all comments", description = "Paginated list with optional sorting")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comments retrieved"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid pagination or sort parameter")
+    })
     public ApiResponse<Page<CommentResponse>> getAllComments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
@@ -42,8 +50,11 @@ public class CommentController {
     }
 
     @GetMapping("/comments/search")
-    @PreAuthorize("hasAnyRole('READER', 'AUTHOR', 'ADMIN')")
     @Operation(summary = "Search comments", description = "Search by content or author")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search results returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "No search parameter provided")
+    })
     public ApiResponse<Page<CommentResponse>> searchComments(
             @RequestParam(required = false) String content,
             @RequestParam(required = false) String author,
@@ -56,22 +67,34 @@ public class CommentController {
     }
 
     @PostMapping("/comments")
-    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Create a new comment")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment created"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed (blank content)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Post or author not found")
+    })
     public ApiResponse<CommentResponse> createComment(@RequestBody @jakarta.validation.Valid CreateCommentRequest request) {
         return ApiResponse.success("Comment created successfully", CommentResponse.from(commentService.create(request)));
     }
 
     @PutMapping("/comments")
-    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Update a comment")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment updated"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Comment not found")
+    })
     public ApiResponse<CommentResponse> editComment(@RequestBody @jakarta.validation.Valid EditCommentRequest request) {
         return ApiResponse.success("Comment updated successfully", CommentResponse.from(commentService.update(request)));
     }
 
     @DeleteMapping("/comments/{id}")
-    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     @Operation(summary = "Delete a comment")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Comment deleted"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Comment not found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid ID format")
+    })
     public ApiResponse<Void> deleteComment(@Parameter(description = "Comment ID") @PathVariable Long id) {
         commentService.delete(id);
         return ApiResponse.success("Comment deleted successfully");

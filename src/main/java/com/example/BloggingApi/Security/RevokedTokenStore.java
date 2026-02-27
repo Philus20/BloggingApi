@@ -6,14 +6,10 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * In-memory store for revoked JWT IDs (blacklist). Used for logout and token invalidation.
- * Entries expire after the token's natural expiry time; expired entries are cleaned periodically.
- */
+// Blacklisted JWT IDs — cleaned up on a schedule once they naturally expire
 @Component
 public class RevokedTokenStore {
 
-    /** jti -> expiresAt (epoch ms). Token is revoked if present and not yet expired. */
     private final Map<String, Long> revoked = new ConcurrentHashMap<>();
 
     public void revoke(String jti, long expiresAtMs) {
@@ -22,7 +18,6 @@ public class RevokedTokenStore {
         }
     }
 
-    /** Returns true if the token ID has been revoked and not yet expired. */
     public boolean isRevoked(String jti) {
         if (jti == null || jti.isBlank()) {
             return false;

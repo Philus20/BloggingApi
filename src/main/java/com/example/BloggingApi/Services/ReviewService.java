@@ -10,7 +10,9 @@ import com.example.BloggingApi.Repositories.PostRepository;
 import com.example.BloggingApi.Repositories.ReviewRepository;
 import com.example.BloggingApi.Repositories.UserRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,8 @@ public class ReviewService {
         this.postRepository = postRepository;
     }
 
+    @Transactional
+    @CacheEvict(value = "reviews", allEntries = true)
     public Review create(CreateReviewRequest req) {
         User user = userRepository.findById(req.userId())
                 .orElseThrow(() -> new NullException("User not found"));
@@ -38,41 +42,35 @@ public class ReviewService {
     }
 
     @Transactional
+    @CacheEvict(value = "reviews", allEntries = true)
     public Review update(EditReviewRequest request) {
-        Review review = reviewRepository.findById(request.id())
+        Review review = reviewRepository.findByIdWithRelations(request.id())
                 .orElseThrow(() -> new NullException("Review not found"));
         review.update(request.rating(), request.comment());
         return review;
     }
 
     @Transactional
+    @CacheEvict(value = "reviews", allEntries = true)
     public void delete(Long id) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new NullException("Review not found"));
         reviewRepository.delete(review);
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "reviews", key = "#id")
     public Review getById(Long id) {
-        return reviewRepository.findById(id)
+        return reviewRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new NullException("Review not found"));
     }
 
+    @Transactional(readOnly = true)
     public Page<Review> getAll(Pageable pageable) {
         return reviewRepository.findAll(pageable);
     }
 
-    public Page<Review> searchByComment(String comment, Pageable pageable) {
-        return reviewRepository.findByCommentContainingIgnoreCase(comment, pageable);
-    }
-
-    public Page<Review> searchByRating(int rating, Pageable pageable) {
-        return reviewRepository.findByRating(rating, pageable);
-    }
-
-    public Page<Review> searchByAuthor(String username, Pageable pageable) {
-        return reviewRepository.findByUserUsernameContainingIgnoreCase(username, pageable);
-    }
-
+    @Transactional(readOnly = true)
     public Page<Review> search(String comment, Integer rating, String author, Pageable pageable) {
         if (comment != null && !comment.isBlank()) {
             return reviewRepository.findByCommentContainingIgnoreCase(comment, pageable);
@@ -86,15 +84,20 @@ public class ReviewService {
         throw new IllegalArgumentException("Please provide at least one search parameter: comment, rating, or author");
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "reviews")
     public Page<Review> getAll(int page, int size, String sortBy, boolean ascending) {
         return getAll(PageableUtils.create(page, size, sortBy, ascending));
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "reviews")
     public Page<Review> search(String comment, Integer rating, String author, int page, int size, String sortBy, boolean ascending) {
         return search(comment, rating, author, PageableUtils.create(page, size, sortBy, ascending));
     }
 
-    /** Search with optional criteria; returns empty page when no criteria provided. */
+    @Transactional(readOnly = true)
+    @Cacheable(value = "reviews")
     public Page<Review> searchOptional(String comment, Integer rating, String author, int page, int size, String sortBy, boolean ascending) {
         Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);
         if (comment != null && !comment.isBlank()) {

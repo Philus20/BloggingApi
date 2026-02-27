@@ -12,12 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Rejects requests whose Origin header is not in the allowed list with 403 Forbidden,
- * so that unauthorized origins are explicitly blocked with an appropriate response code.
- * Requests without an Origin header (e.g. Postman, same-origin) are not affected.
- * Runs before the Spring Security filter chain.
- */
+// Blocks unknown origins with 403 before Spring Security kicks in
 @Component
 @Order(-101)
 public class CorsOriginFilter extends OncePerRequestFilter {
