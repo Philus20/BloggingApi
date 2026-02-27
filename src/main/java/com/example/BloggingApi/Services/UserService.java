@@ -6,7 +6,7 @@ import com.example.BloggingApi.Domain.User;
 import com.example.BloggingApi.Exceptions.NullException;
 import com.example.BloggingApi.Repositories.UserRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;

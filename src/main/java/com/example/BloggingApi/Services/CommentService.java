@@ -10,7 +10,9 @@ import com.example.BloggingApi.Repositories.CommentRepository;
 import com.example.BloggingApi.Repositories.PostRepository;
 import com.example.BloggingApi.Repositories.UserRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class CommentService {
     }
 
     @Transactional
+    @CacheEvict(value = "comments", allEntries = true)
     public Comment create(CreateCommentRequest req) {
         Post post = postRepository.findById(req.postId())
                 .orElseThrow(() -> new NullException("Post not found"));
@@ -39,6 +42,7 @@ public class CommentService {
     }
 
     @Transactional
+    @CacheEvict(value = "comments", allEntries = true)
     public Comment update(EditCommentRequest request) {
         Comment comment = commentRepository.findById(request.id())
                 .orElseThrow(() -> new NullException("Comment not found"));
@@ -47,12 +51,15 @@ public class CommentService {
     }
 
     @Transactional
+    @CacheEvict(value = "comments", allEntries = true)
     public void delete(Long id) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NullException("Comment not found"));
         commentRepository.delete(comment);
     }
 
+
+    @Cacheable(value = "comments", key = "#id")
     public Comment getById(Long id) {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new NullException("Comment not found"));

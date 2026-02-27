@@ -46,6 +46,7 @@ public class Post {
     private List<Comment> comments = new ArrayList<>();
 
     // MANY posts ↔ MANY tags
+    //@Graph
     @ManyToMany
     @JoinTable(
             name = "post_tags",

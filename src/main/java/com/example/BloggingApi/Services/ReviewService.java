@@ -10,7 +10,9 @@ import com.example.BloggingApi.Repositories.PostRepository;
 import com.example.BloggingApi.Repositories.ReviewRepository;
 import com.example.BloggingApi.Repositories.UserRepository;
 import com.example.BloggingApi.Utils.PageableUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,8 @@ public class ReviewService {
         this.postRepository = postRepository;
     }
 
+    @Transactional
+    @CacheEvict(value = "reviews", allEntries = true)
     public Review create(CreateReviewRequest req) {
         User user = userRepository.findById(req.userId())
                 .orElseThrow(() -> new NullException("User not found"));
@@ -38,6 +42,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @CacheEvict(value = "reviews", allEntries = true)
     public Review update(EditReviewRequest request) {
         Review review = reviewRepository.findById(request.id())
                 .orElseThrow(() -> new NullException("Review not found"));
@@ -46,12 +51,14 @@ public class ReviewService {
     }
 
     @Transactional
+    @CacheEvict(value = "reviews", allEntries = true)
     public void delete(Long id) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new NullException("Review not found"));
         reviewRepository.delete(review);
     }
 
+    @Cacheable(value = "reviews", key = "#id")
     public Review getById(Long id) {
         return reviewRepository.findById(id)
                 .orElseThrow(() -> new NullException("Review not found"));
