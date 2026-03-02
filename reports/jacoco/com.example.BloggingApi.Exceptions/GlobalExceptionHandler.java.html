@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Exceptions</a> &gt; <span class="el_source">GlobalExceptionHandler.java</span></div><h1>GlobalExceptionHandler.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Exceptions;
+
+import com.example.BloggingApi.DTOs.Responses.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.util.stream.Collectors;
+
+@RestControllerAdvice
+<span class="fc" id="L23">public class GlobalExceptionHandler {</span>
+
+    // ============ Custom Exceptions ============
+
+    @ExceptionHandler(NullException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleNull(NullException ex) {
+<span class="fc" id="L29">        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(ex.getMessage()));</span>
+    }
+
+    // ============ Bean Validation (@Valid) ============
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+<span class="fc" id="L36">        String message = ex.getBindingResult().getFieldErrors().stream()</span>
+<span class="fc" id="L37">                .map(FieldError::getDefaultMessage)</span>
+<span class="fc" id="L38">                .collect(Collectors.joining(&quot;; &quot;));</span>
+<span class="fc" id="L39">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(message));</span>
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleConstraintViolation(ConstraintViolationException ex) {
+<span class="nc" id="L44">        String message = ex.getConstraintViolations().stream()</span>
+<span class="nc" id="L45">                .map(v -&gt; v.getPropertyPath() + &quot;: &quot; + v.getMessage())</span>
+<span class="nc" id="L46">                .collect(Collectors.joining(&quot;; &quot;));</span>
+<span class="nc" id="L47">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(message));</span>
+    }
+
+    // ============ Authentication &amp; Authorization ============
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleBadCredentials(BadCredentialsException ex) {
+<span class="fc" id="L54">        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)</span>
+<span class="fc" id="L55">                .body(ApiResponse.failure(&quot;Invalid username or password&quot;));</span>
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleAccessDenied(AccessDeniedException ex) {
+<span class="fc" id="L60">        return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="fc" id="L61">                .body(ApiResponse.failure(&quot;You do not have permission to perform this action&quot;));</span>
+    }
+
+    // ============ HTTP / Request Errors ============
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+<span class="nc" id="L68">        String message = &quot;Invalid request body. Check JSON format and field types.&quot;;</span>
+<span class="nc" id="L69">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(message));</span>
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+<span class="nc" id="L74">        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(ApiResponse.failure(ex.getMessage()));</span>
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleMissingParam(MissingServletRequestParameterException ex) {
+<span class="nc" id="L79">        return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="nc" id="L80">                .body(ApiResponse.failure(&quot;Missing required parameter: &quot; + ex.getParameterName()));</span>
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+<span class="nc" id="L85">        String message = String.format(&quot;Invalid value '%s' for parameter '%s'&quot;, ex.getValue(), ex.getName());</span>
+<span class="nc" id="L86">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(message));</span>
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleIllegalArgument(IllegalArgumentException ex) {
+<span class="fc" id="L91">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(ex.getMessage()));</span>
+    }
+
+    // ============ Database / Persistence ============
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+<span class="nc" id="L98">        String message = &quot;Data constraint violated. The operation could not be completed.&quot;;</span>
+<span class="nc" id="L99">        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(message));</span>
+    }
+
+    @ExceptionHandler(EmptyResultDataAccessException.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleEmptyResult(EmptyResultDataAccessException ex) {
+<span class="nc" id="L104">        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(&quot;Resource not found&quot;));</span>
+    }
+
+    // ============ Catch-all ============
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;ApiResponse&lt;Void&gt;&gt; handleGeneric(Exception ex) {
+<span class="fc" id="L111">        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L112">                .body(ApiResponse.failure(&quot;An unexpected error occurred. Please try again later.&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

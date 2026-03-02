@@ -40,7 +40,7 @@ class EditCommentTest {
         // Arrange
         EditCommentRequest request = new EditCommentRequest(1L, "Updated content");
         Comment comment = mock(Comment.class);
-        when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+        when(commentRepository.findByIdWithRelations(1L)).thenReturn(Optional.of(comment));
 
         // Act
         Comment result = commentService.update(request);
@@ -54,7 +54,7 @@ class EditCommentTest {
     void handle_ShouldThrowException_WhenCommentNotFound() {
         // Arrange
         EditCommentRequest request = new EditCommentRequest(1L, "Updated content");
-        when(commentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(commentRepository.findByIdWithRelations(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(NullException.class, () -> commentService.update(request));

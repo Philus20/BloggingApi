@@ -37,7 +37,7 @@ class EditPostTest {
         // Arrange
         EditPostRequest request = new EditPostRequest(1L, "New Title", "New Content");
         Post post = mock(Post.class);
-        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+        when(postRepository.findByIdWithAuthor(1L)).thenReturn(Optional.of(post));
 
         // Act
         Post result = postService.update(request);
@@ -51,7 +51,7 @@ class EditPostTest {
     void handle_ShouldThrowException_WhenPostNotFound() {
         // Arrange
         EditPostRequest request = new EditPostRequest(1L, "New Title", "New Content");
-        when(postRepository.findById(1L)).thenReturn(Optional.empty());
+        when(postRepository.findByIdWithAuthor(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(NullException.class, () -> postService.update(request));

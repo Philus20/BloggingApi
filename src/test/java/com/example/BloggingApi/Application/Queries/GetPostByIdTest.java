@@ -36,7 +36,7 @@ class GetPostByIdTest {
     void handle_ShouldReturnPost_WhenPostExists() throws NullException {
         // Arrange
         Post post = mock(Post.class);
-        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+        when(postRepository.findByIdWithAuthor(1L)).thenReturn(Optional.of(post));
 
         // Act
         Post result = postService.getById(1L);
@@ -49,7 +49,7 @@ class GetPostByIdTest {
     @Test
     void handle_ShouldThrowException_WhenPostNotFound() {
         // Arrange
-        when(postRepository.findById(1L)).thenReturn(Optional.empty());
+        when(postRepository.findByIdWithAuthor(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(NullException.class, () -> postService.getById(1L));

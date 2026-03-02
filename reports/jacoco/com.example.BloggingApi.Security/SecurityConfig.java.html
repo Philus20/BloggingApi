@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Security</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Security;
+
+import com.example.BloggingApi.Filter.JWTFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+public class SecurityConfig {
+
+    private static final String API_V1 = &quot;/api/v1&quot;;
+
+    private final CustomUserDetailsService userDetailsService;
+    private final CorsConfigurationSource corsConfigurationSource;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+
+    @Autowired
+    private JWTFilter filter;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsService,
+                          CorsConfigurationSource corsConfigurationSource,
+                          CustomOAuth2UserService customOAuth2UserService,
+<span class="fc" id="L43">                          OAuth2LoginSuccessHandler oauth2LoginSuccessHandler) {</span>
+<span class="fc" id="L44">        this.userDetailsService = userDetailsService;</span>
+<span class="fc" id="L45">        this.corsConfigurationSource = corsConfigurationSource;</span>
+<span class="fc" id="L46">        this.customOAuth2UserService = customOAuth2UserService;</span>
+<span class="fc" id="L47">        this.oauth2LoginSuccessHandler = oauth2LoginSuccessHandler;</span>
+<span class="fc" id="L48">    }</span>
+
+    // CSRF demo chain for /demo/**
+    @Bean
+    @Order(1)
+    public SecurityFilterChain demoCsrfFilterChain(HttpSecurity http) throws Exception {
+<span class="fc" id="L54">        return http</span>
+<span class="fc" id="L55">                .securityMatcher(&quot;/demo/**&quot;)</span>
+<span class="fc" id="L56">                .csrf(csrf -&gt; { /* enabled by default */ })</span>
+<span class="fc" id="L57">                .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))</span>
+<span class="fc" id="L58">                .authorizeHttpRequests(auth -&gt; auth.anyRequest().permitAll())</span>
+<span class="fc" id="L59">                .build();</span>
+    }
+
+    // Google OAuth2 login chain (only when OAuth2 client is configured, e.g. dev profile)
+    @Bean
+    @Order(2)
+    @ConditionalOnBean(ClientRegistrationRepository.class)
+    public SecurityFilterChain oauth2FilterChain(HttpSecurity http) throws Exception {
+<span class="nc" id="L67">        return http</span>
+<span class="nc" id="L68">                .securityMatcher(&quot;/oauth2/**&quot;, &quot;/login/oauth2/**&quot;)</span>
+<span class="nc" id="L69">                .csrf(csrf -&gt; csrf.disable())</span>
+<span class="nc" id="L70">                .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))</span>
+<span class="nc" id="L71">                .authorizeHttpRequests(auth -&gt; auth.anyRequest().permitAll())</span>
+<span class="nc" id="L72">                .oauth2Login(oauth2 -&gt; oauth2</span>
+<span class="nc" id="L73">                        .userInfoEndpoint(ui -&gt; ui.userService(customOAuth2UserService))</span>
+<span class="nc" id="L74">                        .successHandler(oauth2LoginSuccessHandler))</span>
+<span class="nc" id="L75">                .build();</span>
+    }
+
+    @Bean
+    @Order(3)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+<span class="fc" id="L81">        http</span>
+<span class="fc" id="L82">                .cors(cors -&gt; cors.configurationSource(corsConfigurationSource))</span>
+                // No CSRF needed — stateless JWT, no cookies
+<span class="fc" id="L84">                .csrf(csrf -&gt; csrf.disable())</span>
+<span class="fc" id="L85">                .authorizeHttpRequests(auth -&gt; auth</span>
+                        // Public endpoints
+<span class="fc" id="L87">                        .requestMatchers(HttpMethod.POST, API_V1 + &quot;/login&quot;, API_V1 + &quot;/register&quot;, API_V1 + &quot;/auth/login&quot;).permitAll()</span>
+                        // Swagger
+<span class="fc" id="L89">                        .requestMatchers(&quot;/swagger-ui/**&quot;, &quot;/swagger-ui.html&quot;, &quot;/v3/api-docs/**&quot;).permitAll()</span>
+                        // Admin only
+<span class="fc" id="L91">                        .requestMatchers(API_V1 + &quot;/admin/**&quot;).hasRole(&quot;ADMIN&quot;)</span>
+<span class="fc" id="L92">                        .requestMatchers(HttpMethod.DELETE, API_V1 + &quot;/users/**&quot;).hasRole(&quot;ADMIN&quot;)</span>
+                        // Author or Admin — write operations
+<span class="fc" id="L94">                        .requestMatchers(HttpMethod.POST, API_V1 + &quot;/posts&quot;, API_V1 + &quot;/posts/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L95">                        .requestMatchers(HttpMethod.PUT, API_V1 + &quot;/posts/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L96">                        .requestMatchers(HttpMethod.DELETE, API_V1 + &quot;/posts/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L97">                        .requestMatchers(HttpMethod.POST, API_V1 + &quot;/comments&quot;, API_V1 + &quot;/comments/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L98">                        .requestMatchers(HttpMethod.PUT, API_V1 + &quot;/comments/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L99">                        .requestMatchers(HttpMethod.DELETE, API_V1 + &quot;/comments/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L100">                        .requestMatchers(HttpMethod.POST, API_V1 + &quot;/tags&quot;, API_V1 + &quot;/tags/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L101">                        .requestMatchers(HttpMethod.PUT, API_V1 + &quot;/tags/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L102">                        .requestMatchers(HttpMethod.DELETE, API_V1 + &quot;/tags/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L103">                        .requestMatchers(HttpMethod.POST, API_V1 + &quot;/reviews&quot;, API_V1 + &quot;/reviews/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L104">                        .requestMatchers(HttpMethod.PUT, API_V1 + &quot;/reviews/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+<span class="fc" id="L105">                        .requestMatchers(HttpMethod.DELETE, API_V1 + &quot;/reviews/**&quot;).hasAnyRole(&quot;AUTHOR&quot;, &quot;ADMIN&quot;)</span>
+                        // Everything else needs auth
+<span class="fc" id="L107">                        .requestMatchers(API_V1 + &quot;/**&quot;).authenticated()</span>
+<span class="fc" id="L108">                        .anyRequest().authenticated()</span>
+                )
+<span class="fc" id="L110">                .formLogin(AbstractHttpConfigurer::disable)</span>
+<span class="fc" id="L111">                .httpBasic(AbstractHttpConfigurer::disable)</span>
+<span class="fc" id="L112">                .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+<span class="fc" id="L113">                .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);</span>
+
+<span class="fc" id="L115">        return http.build();</span>
+    }
+
+    // Explicit bean to avoid circular dependency
+    @Bean
+    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
+<span class="fc" id="L121">        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();</span>
+<span class="fc" id="L122">        authProvider.setUserDetailsService(userDetailsService);</span>
+<span class="fc" id="L123">        authProvider.setPasswordEncoder(passwordEncoder);</span>
+<span class="fc" id="L124">        return new ProviderManager(authProvider);</span>
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+<span class="fc" id="L129">        return userDetailsService;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

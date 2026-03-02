@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CacheLoggingAspect.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.AOP</a> &gt; <span class="el_source">CacheLoggingAspect.java</span></div><h1>CacheLoggingAspect.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.AOP;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+@Aspect
+@Component
+@Order(1)
+<span class="fc" id="L24">public class CacheLoggingAspect {</span>
+
+<span class="fc" id="L26">    private static final Logger logger = LoggerFactory.getLogger(CacheLoggingAspect.class);</span>
+
+    private static final long CACHE_HIT_THRESHOLD_MS = 2;
+
+<span class="fc" id="L30">    private final Map&lt;String, CacheStats&gt; statsMap = new ConcurrentHashMap&lt;&gt;();</span>
+
+    @Pointcut(&quot;@annotation(org.springframework.cache.annotation.Cacheable)&quot;)
+<span class="nc" id="L33">    public void cacheableMethods() {}</span>
+
+    @Pointcut(&quot;@annotation(org.springframework.cache.annotation.CacheEvict)&quot;)
+<span class="nc" id="L36">    public void cacheEvictMethods() {}</span>
+
+    @Around(&quot;cacheableMethods()&quot;)
+    public Object logCacheAccess(ProceedingJoinPoint joinPoint) throws Throwable {
+<span class="nc" id="L40">        MethodSignature signature = (MethodSignature) joinPoint.getSignature();</span>
+<span class="nc" id="L41">        String methodName = signature.getMethod().getName();</span>
+<span class="nc" id="L42">        String cacheName = getCacheName(signature);</span>
+<span class="nc" id="L43">        String keyInfo = extractKey(joinPoint.getArgs());</span>
+
+<span class="nc" id="L45">        long start = System.nanoTime();</span>
+<span class="nc" id="L46">        Object result = joinPoint.proceed();</span>
+<span class="nc" id="L47">        long elapsedMs = (System.nanoTime() - start) / 1_000_000;</span>
+
+<span class="nc" id="L49">        CacheStats stats = statsMap.computeIfAbsent(cacheName, k -&gt; new CacheStats());</span>
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (elapsedMs &lt; CACHE_HIT_THRESHOLD_MS) {</span>
+<span class="nc" id="L52">            stats.recordHit(elapsedMs);</span>
+<span class="nc" id="L53">            logger.info(&quot;CACHE HIT  | cache: {} | key: {} | method: {} | {} ms&quot;,</span>
+<span class="nc" id="L54">                    cacheName, keyInfo, methodName, elapsedMs);</span>
+        } else {
+<span class="nc" id="L56">            stats.recordMiss(elapsedMs);</span>
+<span class="nc" id="L57">            logger.info(&quot;CACHE MISS | cache: {} | key: {} | method: {} | {} ms&quot;,</span>
+<span class="nc" id="L58">                    cacheName, keyInfo, methodName, elapsedMs);</span>
+        }
+
+<span class="nc" id="L61">        return result;</span>
+    }
+
+    @Around(&quot;cacheEvictMethods()&quot;)
+    public Object logCacheEviction(ProceedingJoinPoint joinPoint) throws Throwable {
+<span class="fc" id="L66">        MethodSignature signature = (MethodSignature) joinPoint.getSignature();</span>
+<span class="fc" id="L67">        String methodName = signature.getMethod().getName();</span>
+<span class="fc" id="L68">        String cacheName = getEvictCacheName(signature);</span>
+
+<span class="fc" id="L70">        Object result = joinPoint.proceed();</span>
+
+<span class="fc" id="L72">        CacheStats stats = statsMap.computeIfAbsent(cacheName, k -&gt; new CacheStats());</span>
+<span class="fc" id="L73">        stats.recordEviction();</span>
+<span class="fc" id="L74">        logger.info(&quot;CACHE EVICT | cache: {} | method: {}&quot;, cacheName, methodName);</span>
+
+<span class="fc" id="L76">        return result;</span>
+    }
+
+    @Scheduled(fixedRate = 300_000)
+    public void logPerformanceReport() {
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (statsMap.isEmpty()) {</span>
+<span class="fc" id="L82">            return;</span>
+        }
+
+<span class="nc" id="L85">        StringBuilder report = new StringBuilder(&quot;\n===== Cache Performance Report =====\n&quot;);</span>
+
+<span class="nc" id="L87">        statsMap.forEach((cache, stats) -&gt; {</span>
+<span class="nc" id="L88">            long hits = stats.hitCount.get();</span>
+<span class="nc" id="L89">            long misses = stats.missCount.get();</span>
+<span class="nc" id="L90">            long evictions = stats.evictionCount.get();</span>
+<span class="nc" id="L91">            long total = hits + misses;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            double hitRate = total &gt; 0 ? (hits * 100.0 / total) : 0;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            double avgHitMs = hits &gt; 0 ? (stats.totalHitTimeMs.get() / (double) hits) : 0;</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            double avgMissMs = misses &gt; 0 ? (stats.totalMissTimeMs.get() / (double) misses) : 0;</span>
+
+<span class="nc" id="L96">            report.append(String.format(</span>
+                    &quot;  [%s] hits: %d | misses: %d | hit rate: %.1f%% | avg hit: %.1f ms | avg miss: %.1f ms | evictions: %d%n&quot;,
+<span class="nc" id="L98">                    cache, hits, misses, hitRate, avgHitMs, avgMissMs, evictions));</span>
+<span class="nc" id="L99">        });</span>
+
+<span class="nc" id="L101">        report.append(&quot;====================================&quot;);</span>
+<span class="nc" id="L102">        logger.info(report.toString());</span>
+<span class="nc" id="L103">    }</span>
+
+    private String getCacheName(MethodSignature signature) {
+<span class="nc" id="L106">        Cacheable cacheable = signature.getMethod().getAnnotation(Cacheable.class);</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">        if (cacheable != null &amp;&amp; cacheable.value().length &gt; 0) {</span>
+<span class="nc" id="L108">            return Arrays.toString(cacheable.value());</span>
+        }
+<span class="nc" id="L110">        return &quot;unknown&quot;;</span>
+    }
+
+    private String getEvictCacheName(MethodSignature signature) {
+<span class="fc" id="L114">        CacheEvict cacheEvict = signature.getMethod().getAnnotation(CacheEvict.class);</span>
+<span class="pc bpc" id="L115" title="2 of 4 branches missed.">        if (cacheEvict != null &amp;&amp; cacheEvict.value().length &gt; 0) {</span>
+<span class="fc" id="L116">            return Arrays.toString(cacheEvict.value());</span>
+        }
+<span class="nc" id="L118">        return &quot;unknown&quot;;</span>
+    }
+
+    private String extractKey(Object[] args) {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        return args.length &gt; 0 ? String.valueOf(args[0]) : &quot;N/A&quot;;</span>
+    }
+
+<span class="fc" id="L125">    private static class CacheStats {</span>
+<span class="fc" id="L126">        final AtomicLong hitCount = new AtomicLong();</span>
+<span class="fc" id="L127">        final AtomicLong missCount = new AtomicLong();</span>
+<span class="fc" id="L128">        final AtomicLong evictionCount = new AtomicLong();</span>
+<span class="fc" id="L129">        final AtomicLong totalHitTimeMs = new AtomicLong();</span>
+<span class="fc" id="L130">        final AtomicLong totalMissTimeMs = new AtomicLong();</span>
+
+        void recordHit(long ms) {
+<span class="nc" id="L133">            hitCount.incrementAndGet();</span>
+<span class="nc" id="L134">            totalHitTimeMs.addAndGet(ms);</span>
+<span class="nc" id="L135">        }</span>
+
+        void recordMiss(long ms) {
+<span class="nc" id="L138">            missCount.incrementAndGet();</span>
+<span class="nc" id="L139">            totalMissTimeMs.addAndGet(ms);</span>
+<span class="nc" id="L140">        }</span>
+
+        void recordEviction() {
+<span class="fc" id="L143">            evictionCount.incrementAndGet();</span>
+<span class="fc" id="L144">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

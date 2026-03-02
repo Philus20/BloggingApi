@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TagService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Services</a> &gt; <span class="el_source">TagService.java</span></div><h1>TagService.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Services;
+
+import com.example.BloggingApi.DTOs.Requests.CreateTagRequest;
+import com.example.BloggingApi.DTOs.Requests.EditTagRequest;
+import com.example.BloggingApi.Domain.Tag;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.TagRepository;
+import com.example.BloggingApi.Utils.PageableUtils;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public class TagService {
+
+    private final TagRepository tagRepository;
+
+<span class="fc" id="L21">    public TagService(TagRepository tagRepository) {</span>
+<span class="fc" id="L22">        this.tagRepository = tagRepository;</span>
+<span class="fc" id="L23">    }</span>
+
+    @Transactional
+    @CacheEvict(value = &quot;tags&quot;, allEntries = true)
+    public Tag create(CreateTagRequest req) {
+<span class="fc" id="L28">        Tag tag = Tag.create(req.name());</span>
+<span class="fc" id="L29">        return tagRepository.save(tag);</span>
+    }
+
+    @Transactional
+    @CacheEvict(value = &quot;tags&quot;, allEntries = true)
+    public Tag update(EditTagRequest request) {
+<span class="fc" id="L35">        Tag tag = tagRepository.findById(request.id())</span>
+<span class="fc" id="L36">                .orElseThrow(() -&gt; new NullException(&quot;Tag not found&quot;));</span>
+<span class="fc" id="L37">        tag.update(request.name());</span>
+<span class="fc" id="L38">        return tag;</span>
+    }
+
+    @Transactional
+    @CacheEvict(value = &quot;tags&quot;, allEntries = true)
+    public void delete(Long id) {
+<span class="nc" id="L44">        Tag tag = tagRepository.findById(id)</span>
+<span class="nc" id="L45">                .orElseThrow(() -&gt; new NullException(&quot;Tag not found&quot;));</span>
+<span class="nc" id="L46">        tagRepository.delete(tag);</span>
+<span class="nc" id="L47">    }</span>
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;tags&quot;, key = &quot;#id&quot;)
+    public Tag getById(Long id) {
+<span class="nc" id="L52">        return tagRepository.findById(id)</span>
+<span class="nc" id="L53">                .orElseThrow(() -&gt; new NullException(&quot;Tag not found&quot;));</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Tag&gt; getAll(Pageable pageable) {
+<span class="nc" id="L58">        return tagRepository.findAll(pageable);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Tag&gt; searchByName(String name, Pageable pageable) {
+<span class="nc" id="L63">        return tagRepository.findByNameContainingIgnoreCase(name, pageable);</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;tags&quot;)
+    public Page&lt;Tag&gt; getAll(int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L69">        return getAll(PageableUtils.create(page, size, sortBy, ascending));</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;tags&quot;)
+    public Page&lt;Tag&gt; searchByName(String name, int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L75">        return searchByName(name, PageableUtils.create(page, size, sortBy, ascending));</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;tags&quot;)
+    public Page&lt;Tag&gt; searchOptional(String name, int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L81">        Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        if (name != null &amp;&amp; !name.isBlank()) {</span>
+<span class="nc" id="L83">            return tagRepository.findByNameContainingIgnoreCase(name, pageable);</span>
+        }
+<span class="nc" id="L85">        return Page.empty(pageable);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

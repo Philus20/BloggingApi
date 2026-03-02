@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TagController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Controllers.Rest</a> &gt; <span class="el_source">TagController.java</span></div><h1>TagController.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Controllers.Rest;
+
+import com.example.BloggingApi.DTOs.Requests.CreateTagRequest;
+import com.example.BloggingApi.DTOs.Requests.EditTagRequest;
+import com.example.BloggingApi.DTOs.Responses.ApiResponse;
+import com.example.BloggingApi.DTOs.Responses.TagResponse;
+import com.example.BloggingApi.Services.TagService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/v1&quot;)
+@Tag(name = &quot;Tags&quot;, description = &quot;Tag CRUD and search&quot;)
+public class TagController {
+
+    private final TagService tagService;
+
+<span class="fc" id="L23">    public TagController(TagService tagService) {</span>
+<span class="fc" id="L24">        this.tagService = tagService;</span>
+<span class="fc" id="L25">    }</span>
+
+    @GetMapping(&quot;/tags/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Get tag by ID&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tag found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tag not found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid ID format&quot;)
+    })
+    public ApiResponse&lt;TagResponse&gt; getTagById(@Parameter(description = &quot;Tag ID&quot;) @PathVariable Long id) {
+<span class="fc" id="L36">        return ApiResponse.success(&quot;Tag retrieved successfully&quot;, TagResponse.from(tagService.getById(id)));</span>
+    }
+
+    @GetMapping(&quot;/tags&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Get all tags&quot;, description = &quot;Paginated list with optional sorting&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tags retrieved&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid pagination or sort parameter&quot;)
+    })
+    public ApiResponse&lt;Page&lt;TagResponse&gt;&gt; getAllTags(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;5&quot;) int size,
+            @RequestParam(defaultValue = &quot;id&quot;) String sortBy,
+            @RequestParam(defaultValue = &quot;true&quot;) boolean ascending
+    ) {
+<span class="nc" id="L52">        return ApiResponse.success(&quot;Tags retrieved successfully&quot;, tagService.getAll(page, size, sortBy, ascending).map(TagResponse::from));</span>
+    }
+
+    @GetMapping(&quot;/tags/search&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Search tags by name&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Search results returned&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Missing required 'name' parameter&quot;)
+    })
+    public ApiResponse&lt;Page&lt;TagResponse&gt;&gt; searchTags(
+            @RequestParam(required = true) String name,
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;5&quot;) int size,
+            @RequestParam(defaultValue = &quot;name&quot;) String sortBy,
+            @RequestParam(defaultValue = &quot;true&quot;) boolean ascending
+    ) {
+<span class="nc" id="L69">        return ApiResponse.success(&quot;Tags search completed successfully&quot;, tagService.searchByName(name, page, size, sortBy, ascending).map(TagResponse::from));</span>
+    }
+
+    @PostMapping(&quot;/tags&quot;)
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Create a new tag&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tag created&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Validation failed (blank name)&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;409&quot;, description = &quot;Tag name already exists&quot;)
+    })
+    public ApiResponse&lt;TagResponse&gt; createTag(@RequestBody @jakarta.validation.Valid CreateTagRequest request) {
+<span class="fc" id="L81">        return ApiResponse.success(&quot;Tag created successfully&quot;, TagResponse.from(tagService.create(request)));</span>
+    }
+
+    @PutMapping(&quot;/tags&quot;)
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Update a tag&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tag updated&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Validation failed&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tag not found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;409&quot;, description = &quot;Tag name already taken&quot;)
+    })
+    public ApiResponse&lt;TagResponse&gt; editTag(@RequestBody @jakarta.validation.Valid EditTagRequest request) {
+<span class="nc" id="L94">        return ApiResponse.success(&quot;Tag updated successfully&quot;, TagResponse.from(tagService.update(request)));</span>
+    }
+
+    @DeleteMapping(&quot;/tags/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Delete a tag&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tag deleted&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tag not found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid ID format&quot;)
+    })
+    public ApiResponse&lt;Void&gt; deleteTag(@Parameter(description = &quot;Tag ID&quot;) @PathVariable Long id) {
+<span class="fc" id="L106">        tagService.delete(id);</span>
+<span class="fc" id="L107">        return ApiResponse.success(&quot;Tag deleted successfully&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

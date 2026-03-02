@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Post.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Domain</a> &gt; <span class="el_source">Post.java</span></div><h1>Post.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Domain;
+
+import com.example.BloggingApi.Exceptions.NullException;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Entity
+@Table(name = &quot;posts&quot;, indexes = {
+        @Index(name = &quot;idx_post_title&quot;, columnList = &quot;title&quot;),
+        @Index(name = &quot;idx_post_created_at&quot;, columnList = &quot;created_at&quot;),
+        @Index(name = &quot;idx_post_user_id&quot;, columnList = &quot;user_id&quot;)
+})
+public class Post {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;post_id&quot;)
+    private Long id;
+
+    @NotBlank
+    @Size(max = 200)
+    @Column(nullable = false)
+    private String title;
+
+    @NotBlank
+    @Column(columnDefinition = &quot;TEXT&quot;, nullable = false)
+    private String content;
+
+<span class="fc" id="L32">    @Column(name = &quot;created_at&quot;, updatable = false)</span>
+<span class="fc" id="L33">    private LocalDateTime createdAt = LocalDateTime.now();</span>
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;user_id&quot;)
+    private User author;
+
+<span class="fc" id="L39">    @OneToMany(</span>
+            mappedBy = &quot;post&quot;,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List&lt;Comment&gt; comments = new ArrayList&lt;&gt;();
+
+<span class="fc" id="L46">    @ManyToMany</span>
+    @JoinTable(
+            name = &quot;post_tags&quot;,
+            joinColumns = @JoinColumn(name = &quot;post_id&quot;),
+            inverseJoinColumns = @JoinColumn(name = &quot;tag_id&quot;)
+    )
+    private Set&lt;Tag&gt; tags = new HashSet&lt;&gt;();
+
+<span class="fc" id="L54">    public Post() {}</span>
+
+<span class="fc" id="L56">    private Post(String title, String content, User author) {</span>
+<span class="fc" id="L57">        this.title = title;</span>
+<span class="fc" id="L58">        this.content = content;</span>
+<span class="fc" id="L59">        this.author = author;</span>
+<span class="fc" id="L60">        this.createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L61">    }</span>
+
+    public static Post create(String title, String content, User author) {
+<span class="fc" id="L64">        return new Post(title, content, author);</span>
+    }
+
+    public void update(String title, String content) throws NullException {
+<span class="nc bnc" id="L68" title="All 4 branches missed.">        if (title == null || title.isBlank()) {</span>
+<span class="nc" id="L69">            throw new NullException(&quot;Title cannot be blank&quot;);</span>
+        }
+<span class="nc bnc" id="L71" title="All 4 branches missed.">        if (content == null || content.isBlank()) {</span>
+<span class="nc" id="L72">            throw new NullException(&quot;Content cannot be blank&quot;);</span>
+        }
+
+<span class="nc" id="L75">        this.title = title;</span>
+<span class="nc" id="L76">        this.content = content;</span>
+
+<span class="nc" id="L78">}</span>
+
+<span class="fc" id="L80">    public Long getId() { return id; }</span>
+<span class="fc" id="L81">    public String getTitle() { return title; }</span>
+<span class="fc" id="L82">    public String getContent() { return content; }</span>
+<span class="fc" id="L83">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L84">    public User getAuthor() { return author; }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

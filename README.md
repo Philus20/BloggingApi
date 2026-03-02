@@ -164,9 +164,18 @@ Passwords are hashed with **BCrypt** (`PasswordEncoderConfig`). Plain text is ne
 
 ```bash
 ./mvnw test
+./mvnw verify   # runs tests + JaCoCo coverage check
 ```
 
-Tests use JUnit 5, Mockito, and `@ExtendWith(MockitoExtension.class)` for service unit tests.
+Tests use JUnit 5, Mockito, and Spring Boot Test for REST controller integration tests.
+
+**Coverage report:** After `mvn test`, open `reports/jacoco/index.html` in a browser for the JaCoCo HTML report.
+
+**Coverage target (70%):** The JaCoCo check in `pom.xml` enforces a minimum instruction coverage. To reach 70%, update `jacoco.minimum` to `0.70` in `pom.xml` and add tests for:
+- REST controllers (Post, Comment, Tag, Review, User)
+- Services (PostService, CommentService, etc.)
+- GlobalExceptionHandler
+- DTO validators and response mappers
 
 ---
 

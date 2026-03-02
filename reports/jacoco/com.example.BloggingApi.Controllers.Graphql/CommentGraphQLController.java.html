@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommentGraphQLController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Controllers.Graphql</a> &gt; <span class="el_source">CommentGraphQLController.java</span></div><h1>CommentGraphQLController.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Controllers.Graphql;
+
+import com.example.BloggingApi.DTOs.Requests.CreateCommentRequest;
+import com.example.BloggingApi.DTOs.Requests.EditCommentRequest;
+import com.example.BloggingApi.Services.CommentService;
+import com.example.BloggingApi.Domain.Comment;
+import org.springframework.data.domain.Page;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class CommentGraphQLController {
+
+    private final CommentService commentService;
+
+<span class="fc" id="L19">    public CommentGraphQLController(CommentService commentService) {</span>
+<span class="fc" id="L20">        this.commentService = commentService;</span>
+<span class="fc" id="L21">    }</span>
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    public Comment getComment(@Argument Long id) {
+<span class="nc" id="L26">        return commentService.getById(id);</span>
+    }
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    public Page&lt;Comment&gt; listComments(@Argument int page, @Argument int size, @Argument String sortBy, @Argument boolean ascending) {
+<span class="nc" id="L32">        return commentService.getAll(page, size, sortBy, ascending);</span>
+    }
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    public Page&lt;Comment&gt; searchComments(@Argument String content, @Argument String author,
+                                        @Argument int page, @Argument int size, @Argument String sortBy, @Argument boolean ascending) {
+<span class="nc" id="L39">        return commentService.searchOptional(content, author, page, size, sortBy, ascending);</span>
+    }
+
+    @MutationMapping
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    public Comment createComment(@Argument String content, @Argument Long postId, @Argument Long authorId) {
+<span class="nc" id="L45">        return commentService.create(new CreateCommentRequest(content, postId, authorId));</span>
+    }
+
+    @MutationMapping
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    public Comment editComment(@Argument Long id, @Argument String content) {
+<span class="nc" id="L51">        return commentService.update(new EditCommentRequest(id, content));</span>
+    }
+
+    @MutationMapping
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    public String deleteComment(@Argument Long id) {
+<span class="nc" id="L57">        commentService.delete(id);</span>
+<span class="nc" id="L58">        return &quot;Comment with ID &quot; + id + &quot; deleted successfully.&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

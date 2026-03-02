@@ -5,6 +5,7 @@ import com.example.BloggingApi.DTOs.Requests.CreateUserRequest;
 import com.example.BloggingApi.Domain.User;
 import com.example.BloggingApi.Repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -18,6 +19,9 @@ class CreateUserTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -37,6 +41,7 @@ class CreateUserTest {
         );
 
         when(userRepository.findByUsername("john_doe")).thenReturn(null);
+        when(passwordEncoder.encode(any(CharSequence.class))).thenAnswer(invocation -> invocation.getArgument(0).toString());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Services</a> &gt; <span class="el_source">ReviewService.java</span></div><h1>ReviewService.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Services;
+
+import com.example.BloggingApi.DTOs.Requests.CreateReviewRequest;
+import com.example.BloggingApi.DTOs.Requests.EditReviewRequest;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Domain.Review;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.ReviewRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
+import com.example.BloggingApi.Utils.PageableUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ReviewService {
+
+    private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
+    private final PostRepository postRepository;
+
+<span class="fc" id="L27">    public ReviewService(ReviewRepository reviewRepository, UserRepository userRepository, PostRepository postRepository) {</span>
+<span class="fc" id="L28">        this.reviewRepository = reviewRepository;</span>
+<span class="fc" id="L29">        this.userRepository = userRepository;</span>
+<span class="fc" id="L30">        this.postRepository = postRepository;</span>
+<span class="fc" id="L31">    }</span>
+
+    @Transactional
+    @CacheEvict(value = &quot;reviews&quot;, allEntries = true)
+    public Review create(CreateReviewRequest req) {
+<span class="fc" id="L36">        User user = userRepository.findById(req.userId())</span>
+<span class="fc" id="L37">                .orElseThrow(() -&gt; new NullException(&quot;User not found&quot;));</span>
+<span class="fc" id="L38">        Post post = postRepository.findById(req.postId())</span>
+<span class="pc" id="L39">                .orElseThrow(() -&gt; new NullException(&quot;Post not found&quot;));</span>
+<span class="fc" id="L40">        Review review = Review.create(req.rating(), req.comment(), user, post);</span>
+<span class="fc" id="L41">        return reviewRepository.save(review);</span>
+    }
+
+    @Transactional
+    @CacheEvict(value = &quot;reviews&quot;, allEntries = true)
+    public Review update(EditReviewRequest request) {
+<span class="fc" id="L47">        Review review = reviewRepository.findByIdWithRelations(request.id())</span>
+<span class="fc" id="L48">                .orElseThrow(() -&gt; new NullException(&quot;Review not found&quot;));</span>
+<span class="fc" id="L49">        review.update(request.rating(), request.comment());</span>
+<span class="fc" id="L50">        return review;</span>
+    }
+
+    @Transactional
+    @CacheEvict(value = &quot;reviews&quot;, allEntries = true)
+    public void delete(Long id) {
+<span class="fc" id="L56">        Review review = reviewRepository.findById(id)</span>
+<span class="fc" id="L57">                .orElseThrow(() -&gt; new NullException(&quot;Review not found&quot;));</span>
+<span class="fc" id="L58">        reviewRepository.delete(review);</span>
+<span class="fc" id="L59">    }</span>
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;reviews&quot;, key = &quot;#id&quot;)
+    public Review getById(Long id) {
+<span class="nc" id="L64">        return reviewRepository.findByIdWithRelations(id)</span>
+<span class="nc" id="L65">                .orElseThrow(() -&gt; new NullException(&quot;Review not found&quot;));</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Review&gt; getAll(Pageable pageable) {
+<span class="fc" id="L70">        return reviewRepository.findAll(pageable);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Review&gt; search(String comment, Integer rating, String author, Pageable pageable) {
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        if (comment != null &amp;&amp; !comment.isBlank()) {</span>
+<span class="nc" id="L76">            return reviewRepository.findByCommentContainingIgnoreCase(comment, pageable);</span>
+        }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (rating != null) {</span>
+<span class="nc" id="L79">            return reviewRepository.findByRating(rating, pageable);</span>
+        }
+<span class="nc bnc" id="L81" title="All 4 branches missed.">        if (author != null &amp;&amp; !author.isBlank()) {</span>
+<span class="nc" id="L82">            return reviewRepository.findByUserUsernameContainingIgnoreCase(author, pageable);</span>
+        }
+<span class="nc" id="L84">        throw new IllegalArgumentException(&quot;Please provide at least one search parameter: comment, rating, or author&quot;);</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;reviews&quot;)
+    public Page&lt;Review&gt; getAll(int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L90">        return getAll(PageableUtils.create(page, size, sortBy, ascending));</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;reviews&quot;)
+    public Page&lt;Review&gt; search(String comment, Integer rating, String author, int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L96">        return search(comment, rating, author, PageableUtils.create(page, size, sortBy, ascending));</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;reviews&quot;)
+    public Page&lt;Review&gt; searchOptional(String comment, Integer rating, String author, int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L102">        Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">        if (comment != null &amp;&amp; !comment.isBlank()) {</span>
+<span class="nc" id="L104">            return reviewRepository.findByCommentContainingIgnoreCase(comment, pageable);</span>
+        }
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (rating != null) {</span>
+<span class="nc" id="L107">            return reviewRepository.findByRating(rating, pageable);</span>
+        }
+<span class="nc bnc" id="L109" title="All 4 branches missed.">        if (author != null &amp;&amp; !author.isBlank()) {</span>
+<span class="nc" id="L110">            return reviewRepository.findByUserUsernameContainingIgnoreCase(author, pageable);</span>
+        }
+<span class="nc" id="L112">        return Page.empty(pageable);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

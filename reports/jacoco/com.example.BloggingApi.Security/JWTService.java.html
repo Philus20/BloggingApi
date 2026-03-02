@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JWTService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Security</a> &gt; <span class="el_source">JWTService.java</span></div><h1>JWTService.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Security;
+
+import com.example.BloggingApi.Domain.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
+
+// JWT signing and validation (HMAC SHA-256)
+@Service
+<span class="fc" id="L21">public class JWTService {</span>
+
+    private static final int HMAC_SHA256_MIN_BYTES = 32;
+
+    @Value(&quot;${app.jwt.secret:defaultsecret}&quot;)
+    private String secret;
+
+    @Value(&quot;${app.jwt.expiration-ms:3600000}&quot;)
+    private long expirationMs;
+
+    public String generateToken(User user) {
+<span class="nc" id="L32">        Map&lt;String, Object&gt; claims = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        claims.put(&quot;role&quot;, user.getRole() != null ? user.getRole().trim().toUpperCase() : &quot;READER&quot;);</span>
+<span class="nc" id="L34">        claims.put(&quot;email&quot;, user.getEmail());</span>
+<span class="nc" id="L35">        String jti = UUID.randomUUID().toString();</span>
+
+<span class="nc" id="L37">        Date now = new Date();</span>
+<span class="nc" id="L38">        Date expiry = new Date(System.currentTimeMillis() + expirationMs);</span>
+
+<span class="nc" id="L40">        return Jwts.builder()</span>
+<span class="nc" id="L41">                .claims(claims)</span>
+<span class="nc" id="L42">                .subject(user.getUsername())</span>
+<span class="nc" id="L43">                .id(jti)</span>
+<span class="nc" id="L44">                .issuedAt(now)</span>
+<span class="nc" id="L45">                .expiration(expiry)</span>
+<span class="nc" id="L46">                .signWith(getSigningKey())</span>
+<span class="nc" id="L47">                .compact();</span>
+    }
+
+    public String extractJti(String token) {
+<span class="nc" id="L51">        Object jti = extractAllClaims(token).get(&quot;jti&quot;);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        return jti instanceof String s ? s : null;</span>
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails) {
+<span class="nc" id="L56">        String username = extractUsername(token);</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        return username.equals(userDetails.getUsername()) &amp;&amp; !isTokenExpired(token);</span>
+    }
+
+    public boolean isTokenExpired(String token) {
+<span class="nc" id="L61">        return extractExpiration(token).before(new Date());</span>
+    }
+
+    public String extractUsername(String token) {
+<span class="nc" id="L65">        return extractClaim(token, Claims::getSubject);</span>
+    }
+
+    public Date extractExpiration(String token) {
+<span class="nc" id="L69">        return extractClaim(token, Claims::getExpiration);</span>
+    }
+
+    public &lt;T&gt; T extractClaim(String token, Function&lt;Claims, T&gt; resolver) {
+<span class="nc" id="L73">        Claims claims = extractAllClaims(token);</span>
+<span class="nc" id="L74">        return resolver.apply(claims);</span>
+    }
+
+    public Claims extractAllClaims(String token) {
+<span class="nc" id="L78">        return Jwts.parser()</span>
+<span class="nc" id="L79">                .verifyWith(getSigningKey())</span>
+<span class="nc" id="L80">                .build()</span>
+<span class="nc" id="L81">                .parseSignedClaims(token)</span>
+<span class="nc" id="L82">                .getPayload();</span>
+    }
+
+    private SecretKey getSigningKey() {
+<span class="nc" id="L86">        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (keyBytes.length &lt; HMAC_SHA256_MIN_BYTES) {</span>
+<span class="nc" id="L88">            throw new IllegalStateException(&quot;JWT secret must be at least 32 bytes for HMAC SHA-256&quot;);</span>
+        }
+<span class="nc" id="L90">        return Keys.hmacShaKeyFor(keyBytes);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

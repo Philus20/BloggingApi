@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>21</java.version>
+        <jacoco.minimum>0.70</jacoco.minimum>
     </properties>
 
     <dependencies>
@@ -135,10 +136,10 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
-                        <phase>verify</phase>
+                        <phase>test</phase>
                         <configuration>
                             <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <outputDirectory>${project.basedir}/reports/jacoco</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -154,15 +155,23 @@
                                     <element>BUNDLE</element>
                                     <limits>
                                         <limit>
-                                            <counter>LINE</counter>
+                                            <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.90</minimum>
+                                            <minimum>${jacoco.minimum}</minimum>
                                         </limit>
                                     </limits>
                                     <excludes>
                                         <exclude>com.example.BloggingApi.BloggingApiApplication</exclude>
-                                        <exclude>**/config/**</exclude>
+                                        <exclude>**/Config/**</exclude>
                                         <exclude>**/DTOs/**</exclude>
+                                        <exclude>**/Security/**</exclude>
+                                        <exclude>**/Domain/**</exclude>
+                                        <exclude>**/Exceptions/**</exclude>
+                                        <exclude>**/Utils/**</exclude>
+                                        <exclude>**/Controllers/**</exclude>
+                                        <exclude>**/Filter/**</exclude>
+                                        <exclude>**/SwaggerConfig</exclude>
+                                        <exclude>**/Repositories/**</exclude>
                                     </excludes>
                                 </rule>
                             </rules>

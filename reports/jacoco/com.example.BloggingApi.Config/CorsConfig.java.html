@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CorsConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Config</a> &gt; <span class="el_source">CorsConfig.java</span></div><h1>CorsConfig.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+// CORS setup — allowed origins, methods, headers all come from application.properties
+@Configuration
+<span class="fc" id="L16">public class CorsConfig {</span>
+
+    @Value(&quot;${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080}&quot;)
+    private String allowedOriginsConfig;
+
+    @Value(&quot;${app.cors.allowed-methods:GET,POST,PUT,PATCH,DELETE,OPTIONS}&quot;)
+    private String allowedMethodsConfig;
+
+    @Value(&quot;${app.cors.allowed-headers:Authorization,Content-Type,Accept,X-Requested-With,Origin}&quot;)
+    private String allowedHeadersConfig;
+
+    @Value(&quot;${app.cors.max-age:3600}&quot;)
+    private long maxAge;
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+<span class="fc" id="L32">        CorsConfiguration config = new CorsConfiguration();</span>
+<span class="fc" id="L33">        config.setAllowedOrigins(parseCommaSeparated(allowedOriginsConfig));</span>
+<span class="fc" id="L34">        config.setAllowedMethods(parseCommaSeparated(allowedMethodsConfig));</span>
+<span class="fc" id="L35">        config.setAllowedHeaders(parseCommaSeparated(allowedHeadersConfig));</span>
+<span class="fc" id="L36">        config.setAllowCredentials(true);</span>
+<span class="fc" id="L37">        config.setMaxAge(maxAge);</span>
+
+<span class="fc" id="L39">        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
+<span class="fc" id="L40">        source.registerCorsConfiguration(&quot;/**&quot;, config);</span>
+<span class="fc" id="L41">        return source;</span>
+    }
+
+    // Shared with CorsOriginFilter
+    @Bean(&quot;corsAllowedOriginsList&quot;)
+    public List&lt;String&gt; corsAllowedOriginsList() {
+<span class="fc" id="L47">        return parseCommaSeparated(allowedOriginsConfig);</span>
+    }
+
+    private static List&lt;String&gt; parseCommaSeparated(String value) {
+<span class="pc bpc" id="L51" title="2 of 4 branches missed.">        if (value == null || value.isBlank()) {</span>
+<span class="nc" id="L52">            return List.of();</span>
+        }
+<span class="fc" id="L54">        return Arrays.stream(value.split(&quot;,&quot;))</span>
+<span class="fc" id="L55">                .map(String::trim)</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">                .filter(s -&gt; !s.isEmpty())</span>
+<span class="fc" id="L57">                .collect(Collectors.toList());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

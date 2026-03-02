@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CorsOriginFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Filter</a> &gt; <span class="el_source">CorsOriginFilter.java</span></div><h1>CorsOriginFilter.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Filter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
+
+// Blocks unknown origins with 403 before Spring Security kicks in
+@Component
+@Order(-101)
+public class CorsOriginFilter extends OncePerRequestFilter {
+
+    private static final String ORIGIN_HEADER = &quot;Origin&quot;;
+
+    private final List&lt;String&gt; allowedOrigins;
+
+<span class="fc" id="L24">    public CorsOriginFilter(@Qualifier(&quot;corsAllowedOriginsList&quot;) List&lt;String&gt; allowedOrigins) {</span>
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">        this.allowedOrigins = allowedOrigins != null ? allowedOrigins : List.of();</span>
+<span class="fc" id="L26">    }</span>
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+<span class="fc" id="L31">        String origin = request.getHeader(ORIGIN_HEADER);</span>
+<span class="pc bpc" id="L32" title="3 of 4 branches missed.">        if (origin != null &amp;&amp; !origin.isBlank()) {</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">            if (!allowedOrigins.contains(origin)) {</span>
+<span class="nc" id="L34">                response.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L35">                response.setContentType(&quot;application/json&quot;);</span>
+<span class="nc" id="L36">                response.getWriter().write(&quot;{\&quot;error\&quot;:\&quot;CORS not allowed for this origin\&quot;}&quot;);</span>
+<span class="nc" id="L37">                return;</span>
+            }
+        }
+<span class="fc" id="L40">        filterChain.doFilter(request, response);</span>
+<span class="fc" id="L41">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

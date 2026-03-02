@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomUserDetailsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Security</a> &gt; <span class="el_source">CustomUserDetailsService.java</span></div><h1>CustomUserDetailsService.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Security;
+
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Repositories.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.List;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+<span class="fc" id="L18">    public CustomUserDetailsService(UserRepository userRepository) {</span>
+<span class="fc" id="L19">        this.userRepository = userRepository;</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+<span class="nc" id="L24">        User user = userRepository.findByUsernameIgnoreCase(username)</span>
+<span class="nc" id="L25">                .orElseThrow(() -&gt; new UsernameNotFoundException(&quot;User not found&quot;));</span>
+
+<span class="nc" id="L27">        String role = user.getRole();</span>
+<span class="nc bnc" id="L28" title="All 4 branches missed.">        if (role == null || role.isBlank()) {</span>
+<span class="nc" id="L29">            role = &quot;READER&quot;;</span>
+<span class="nc" id="L30">        } else {</span>
+<span class="nc" id="L31">            role = role.trim().toUpperCase();</span>
+<span class="nc bnc" id="L32" title="All 4 branches missed.">            if (&quot;GENERAL&quot;.equals(role) || &quot;USER&quot;.equals(role)) {</span>
+<span class="nc" id="L33">                role = &quot;READER&quot;;</span>
+            }
+        }
+<span class="nc" id="L36">        String authority = &quot;ROLE_&quot; + role;</span>
+<span class="nc" id="L37">        return org.springframework.security.core.userdetails.User.builder()</span>
+<span class="nc" id="L38">                .username(user.getUsername())</span>
+<span class="nc" id="L39">                .password(user.getPassword())</span>
+<span class="nc" id="L40">                .authorities(List.of(new SimpleGrantedAuthority(authority)))</span>
+<span class="nc" id="L41">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

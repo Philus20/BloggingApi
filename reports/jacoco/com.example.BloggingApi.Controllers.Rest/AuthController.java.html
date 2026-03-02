@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Controllers.Rest</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Controllers.Rest;
+
+import com.example.BloggingApi.DTOs.Responses.ApiResponse;
+import com.example.BloggingApi.DTOs.Responses.LoginResponse;
+import com.example.BloggingApi.Security.ActiveTokenStore;
+import com.example.BloggingApi.Security.JWTService;
+import com.example.BloggingApi.Security.RevokedTokenStore;
+import com.example.BloggingApi.Security.SecurityEventService;
+import com.example.BloggingApi.Services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+@RestController
+@RequestMapping(&quot;/api/v1/auth&quot;)
+@Tag(name = &quot;Auth&quot;, description = &quot;JWT authentication&quot;)
+public class AuthController {
+
+    private final UserService userService;
+    private final JWTService jwtService;
+    private final RevokedTokenStore revokedTokenStore;
+    private final ActiveTokenStore activeTokenStore;
+    private final SecurityEventService securityEventService;
+
+    public AuthController(UserService userService, JWTService jwtService,
+                          RevokedTokenStore revokedTokenStore, ActiveTokenStore activeTokenStore,
+<span class="fc" id="L35">                          SecurityEventService securityEventService) {</span>
+<span class="fc" id="L36">        this.userService = userService;</span>
+<span class="fc" id="L37">        this.jwtService = jwtService;</span>
+<span class="fc" id="L38">        this.revokedTokenStore = revokedTokenStore;</span>
+<span class="fc" id="L39">        this.activeTokenStore = activeTokenStore;</span>
+<span class="fc" id="L40">        this.securityEventService = securityEventService;</span>
+<span class="fc" id="L41">    }</span>
+
+    @PostMapping(&quot;/login&quot;)
+    @Operation(summary = &quot;Login&quot;, description = &quot;Authenticate with username and password. Returns a signed JWT.&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Login successful, JWT returned&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Missing or invalid request body&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;401&quot;, description = &quot;Bad credentials (wrong username or password)&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;429&quot;, description = &quot;Too many failed attempts — temporarily locked&quot;)
+    })
+    public ResponseEntity&lt;ApiResponse&lt;LoginResponse&gt;&gt; login(@RequestBody @jakarta.validation.Valid com.example.BloggingApi.DTOs.Requests.LoginRequest request) {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (securityEventService.isBlocked(request.username())) {</span>
+<span class="nc" id="L53">            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)</span>
+<span class="nc" id="L54">                    .body(ApiResponse.failure(&quot;Account temporarily locked due to too many failed attempts. Try again in a few minutes.&quot;));</span>
+        }
+
+        try {
+<span class="nc" id="L58">            LoginResponse response = userService.login(request);</span>
+<span class="nc" id="L59">            return ResponseEntity.ok(ApiResponse.success(&quot;Login successful&quot;, response));</span>
+<span class="nc" id="L60">        } catch (org.springframework.security.authentication.BadCredentialsException e) {</span>
+<span class="nc" id="L61">            securityEventService.logLoginFailure(request.username(), e.getMessage());</span>
+<span class="nc" id="L62">            throw e;</span>
+        }
+    }
+
+    @PostMapping(&quot;/logout&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Logout&quot;, description = &quot;Revoke the current Bearer token. Token is blacklisted.&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Logged out successfully&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;401&quot;, description = &quot;Missing or invalid Bearer token&quot;)
+    })
+    public ApiResponse&lt;Void&gt; logout(HttpServletRequest request, Authentication authentication) {
+<span class="nc" id="L74">        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        if (authHeader != null &amp;&amp; authHeader.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="nc" id="L76">            String token = authHeader.substring(7);</span>
+            try {
+<span class="nc" id="L78">                String jti = jwtService.extractJti(token);</span>
+<span class="nc" id="L79">                long expMs = jwtService.extractExpiration(token).getTime();</span>
+<span class="nc" id="L80">                String username = jwtService.extractUsername(token);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">                if (jti != null) {</span>
+<span class="nc" id="L82">                    revokedTokenStore.revoke(jti, expMs);</span>
+<span class="nc" id="L83">                    activeTokenStore.remove(jti);</span>
+<span class="nc" id="L84">                    securityEventService.logTokenRevoked(username, jti);</span>
+                }
+<span class="nc" id="L86">            } catch (Exception ignored) {}</span>
+        }
+<span class="nc" id="L88">        return ApiResponse.success(&quot;Logged out successfully&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

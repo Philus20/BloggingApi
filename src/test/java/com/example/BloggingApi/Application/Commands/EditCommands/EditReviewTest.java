@@ -40,7 +40,7 @@ class EditReviewTest {
         // Arrange
         EditReviewRequest request = new EditReviewRequest(1L, 5, "Updated feedback");
         Review review = mock(Review.class);
-        when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
+        when(reviewRepository.findByIdWithRelations(1L)).thenReturn(Optional.of(review));
 
         // Act
         Review result = reviewService.update(request);
@@ -54,7 +54,7 @@ class EditReviewTest {
     void handle_ShouldThrowException_WhenReviewNotFound() {
         // Arrange
         EditReviewRequest request = new EditReviewRequest(1L, 5, "Updated feedback");
-        when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
+        when(reviewRepository.findByIdWithRelations(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(NullException.class, () -> reviewService.update(request));

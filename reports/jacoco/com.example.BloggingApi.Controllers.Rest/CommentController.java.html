@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommentController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Controllers.Rest</a> &gt; <span class="el_source">CommentController.java</span></div><h1>CommentController.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Controllers.Rest;
+
+import com.example.BloggingApi.DTOs.Requests.CreateCommentRequest;
+import com.example.BloggingApi.DTOs.Requests.EditCommentRequest;
+import com.example.BloggingApi.DTOs.Responses.ApiResponse;
+import com.example.BloggingApi.DTOs.Responses.CommentResponse;
+import com.example.BloggingApi.Services.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/v1&quot;)
+@Tag(name = &quot;Comments&quot;, description = &quot;Comment CRUD and search&quot;)
+public class CommentController {
+
+    private final CommentService commentService;
+
+<span class="fc" id="L23">    public CommentController(CommentService commentService) {</span>
+<span class="fc" id="L24">        this.commentService = commentService;</span>
+<span class="fc" id="L25">    }</span>
+
+    @GetMapping(&quot;/comments/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Get comment by ID&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Comment found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Comment not found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid ID format&quot;)
+    })
+    public ApiResponse&lt;CommentResponse&gt; getCommentById(@Parameter(description = &quot;Comment ID&quot;) @PathVariable Long id) {
+<span class="fc" id="L36">        return ApiResponse.success(&quot;Comment retrieved successfully&quot;, CommentResponse.from(commentService.getById(id)));</span>
+    }
+
+    @GetMapping(&quot;/comments&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Get all comments&quot;, description = &quot;Paginated list with optional sorting&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Comments retrieved&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid pagination or sort parameter&quot;)
+    })
+    public ApiResponse&lt;Page&lt;CommentResponse&gt;&gt; getAllComments(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;5&quot;) int size,
+            @RequestParam(defaultValue = &quot;id&quot;) String sortBy,
+            @RequestParam(defaultValue = &quot;true&quot;) boolean ascending
+    ) {
+<span class="nc" id="L52">        return ApiResponse.success(&quot;Comments retrieved successfully&quot;, commentService.getAll(page, size, sortBy, ascending).map(CommentResponse::from));</span>
+    }
+
+    @GetMapping(&quot;/comments/search&quot;)
+    @PreAuthorize(&quot;hasAnyRole('READER', 'AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Search comments&quot;, description = &quot;Search by content or author&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Search results returned&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;No search parameter provided&quot;)
+    })
+    public ApiResponse&lt;Page&lt;CommentResponse&gt;&gt; searchComments(
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) String author,
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;5&quot;) int size,
+            @RequestParam(defaultValue = &quot;createdAt&quot;) String sortBy,
+            @RequestParam(defaultValue = &quot;false&quot;) boolean ascending
+    ) {
+<span class="nc" id="L70">        return ApiResponse.success(&quot;Comments search completed successfully&quot;, commentService.search(content, author, page, size, sortBy, ascending).map(CommentResponse::from));</span>
+    }
+
+    @PostMapping(&quot;/comments&quot;)
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Create a new comment&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Comment created&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Validation failed (blank content)&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Post or author not found&quot;)
+    })
+    public ApiResponse&lt;CommentResponse&gt; createComment(@RequestBody @jakarta.validation.Valid CreateCommentRequest request) {
+<span class="fc" id="L82">        return ApiResponse.success(&quot;Comment created successfully&quot;, CommentResponse.from(commentService.create(request)));</span>
+    }
+
+    @PutMapping(&quot;/comments&quot;)
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Update a comment&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Comment updated&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Validation failed&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Comment not found&quot;)
+    })
+    public ApiResponse&lt;CommentResponse&gt; editComment(@RequestBody @jakarta.validation.Valid EditCommentRequest request) {
+<span class="nc" id="L94">        return ApiResponse.success(&quot;Comment updated successfully&quot;, CommentResponse.from(commentService.update(request)));</span>
+    }
+
+    @DeleteMapping(&quot;/comments/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('AUTHOR', 'ADMIN')&quot;)
+    @Operation(summary = &quot;Delete a comment&quot;)
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;200&quot;, description = &quot;Comment deleted&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;404&quot;, description = &quot;Comment not found&quot;),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid ID format&quot;)
+    })
+    public ApiResponse&lt;Void&gt; deleteComment(@Parameter(description = &quot;Comment ID&quot;) @PathVariable Long id) {
+<span class="fc" id="L106">        commentService.delete(id);</span>
+<span class="fc" id="L107">        return ApiResponse.success(&quot;Comment deleted successfully&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

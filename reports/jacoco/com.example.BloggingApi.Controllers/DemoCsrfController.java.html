@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DemoCsrfController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Controllers</a> &gt; <span class="el_source">DemoCsrfController.java</span></div><h1>DemoCsrfController.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Controllers;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+// Quick demo to show CSRF protection in action
+@RestController
+@RequestMapping(&quot;/demo&quot;)
+<span class="fc" id="L16">public class DemoCsrfController {</span>
+
+    @GetMapping(value = &quot;/csrf-form&quot;, produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity&lt;String&gt; csrfForm(HttpServletRequest request) {
+<span class="nc" id="L20">        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());</span>
+<span class="nc bnc" id="L21" title="All 2 branches missed.">        if (csrfToken == null) {</span>
+<span class="nc" id="L22">            return ResponseEntity.ok()</span>
+<span class="nc" id="L23">                    .body(&quot;&lt;html&gt;&lt;body&gt;&lt;p&gt;CSRF token not available (ensure request is under /demo/** with CSRF enabled).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+        }
+<span class="nc" id="L25">        String tokenName = csrfToken.getParameterName();</span>
+<span class="nc" id="L26">        String tokenValue = csrfToken.getToken();</span>
+<span class="nc" id="L27">        String html = &quot;&quot;&quot;</span>
+                &lt;!DOCTYPE html&gt;
+                &lt;html&gt;
+                &lt;head&gt;&lt;title&gt;CSRF demo form&lt;/title&gt;&lt;/head&gt;
+                &lt;body&gt;
+                  &lt;h1&gt;CSRF token demo&lt;/h1&gt;
+                  &lt;p&gt;This form includes a hidden _csrf field. Submit to see CSRF validation in action.&lt;/p&gt;
+                  &lt;form method=&quot;post&quot; action=&quot;/demo/csrf-submit&quot;&gt;
+                    &lt;input type=&quot;hidden&quot; name=&quot;%s&quot; value=&quot;%s&quot;/&gt;
+                    &lt;label&gt;Message: &lt;input type=&quot;text&quot; name=&quot;message&quot; value=&quot;Hello CSRF&quot;/&gt;&lt;/label&gt;
+                    &lt;button type=&quot;submit&quot;&gt;Submit&lt;/button&gt;
+                  &lt;/form&gt;
+                &lt;/body&gt;
+                &lt;/html&gt;
+<span class="nc" id="L41">                &quot;&quot;&quot;.formatted(escapeHtml(tokenName), escapeHtml(tokenValue));</span>
+<span class="nc" id="L42">        return ResponseEntity.ok().body(html);</span>
+    }
+
+    @PostMapping(value = &quot;/csrf-submit&quot;, produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity&lt;String&gt; csrfSubmit(@RequestParam(defaultValue = &quot;&quot;) String message) {
+<span class="nc" id="L47">        return ResponseEntity.ok()</span>
+<span class="nc" id="L48">                .body(&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Form accepted&lt;/h1&gt;&lt;p&gt;CSRF token was valid. Message: &quot; + escapeHtml(message) + &quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+    }
+
+    private static String escapeHtml(String s) {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (s == null) return &quot;&quot;;</span>
+<span class="nc" id="L53">        return s.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;).replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;).replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;).replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

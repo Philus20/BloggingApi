@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommentService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">BloggingApi</a> &gt; <a href="index.source.html" class="el_package">com.example.BloggingApi.Services</a> &gt; <span class="el_source">CommentService.java</span></div><h1>CommentService.java</h1><pre class="source lang-java linenums">package com.example.BloggingApi.Services;
+
+import com.example.BloggingApi.DTOs.Requests.CreateCommentRequest;
+import com.example.BloggingApi.DTOs.Requests.EditCommentRequest;
+import com.example.BloggingApi.Domain.Comment;
+import com.example.BloggingApi.Domain.Post;
+import com.example.BloggingApi.Domain.User;
+import com.example.BloggingApi.Exceptions.NullException;
+import com.example.BloggingApi.Repositories.CommentRepository;
+import com.example.BloggingApi.Repositories.PostRepository;
+import com.example.BloggingApi.Repositories.UserRepository;
+import com.example.BloggingApi.Utils.PageableUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CommentService {
+
+    private final CommentRepository commentRepository;
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+
+<span class="fc" id="L27">    public CommentService(CommentRepository commentRepository, PostRepository postRepository, UserRepository userRepository) {</span>
+<span class="fc" id="L28">        this.commentRepository = commentRepository;</span>
+<span class="fc" id="L29">        this.postRepository = postRepository;</span>
+<span class="fc" id="L30">        this.userRepository = userRepository;</span>
+<span class="fc" id="L31">    }</span>
+
+    @Transactional
+    @CacheEvict(value = &quot;comments&quot;, allEntries = true)
+    public Comment create(CreateCommentRequest req) {
+<span class="fc" id="L36">        Post post = postRepository.findById(req.postId())</span>
+<span class="fc" id="L37">                .orElseThrow(() -&gt; new NullException(&quot;Post not found&quot;));</span>
+<span class="fc" id="L38">        User author = userRepository.findById(req.authorId())</span>
+<span class="fc" id="L39">                .orElseThrow(() -&gt; new NullException(&quot;Author not found&quot;));</span>
+<span class="fc" id="L40">        Comment comment = Comment.create(req.content(), post, author);</span>
+<span class="fc" id="L41">        return commentRepository.save(comment);</span>
+    }
+
+    @Transactional
+    @CacheEvict(value = &quot;comments&quot;, allEntries = true)
+    public Comment update(EditCommentRequest request) {
+<span class="fc" id="L47">        Comment comment = commentRepository.findByIdWithRelations(request.id())</span>
+<span class="fc" id="L48">                .orElseThrow(() -&gt; new NullException(&quot;Comment not found&quot;));</span>
+<span class="fc" id="L49">        comment.update(request.content());</span>
+<span class="fc" id="L50">        return comment;</span>
+    }
+
+    @Transactional
+    @CacheEvict(value = &quot;comments&quot;, allEntries = true)
+    public void delete(Long id) {
+<span class="fc" id="L56">        Comment comment = commentRepository.findById(id)</span>
+<span class="fc" id="L57">                .orElseThrow(() -&gt; new NullException(&quot;Comment not found&quot;));</span>
+<span class="fc" id="L58">        commentRepository.delete(comment);</span>
+<span class="fc" id="L59">    }</span>
+
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;comments&quot;, key = &quot;#id&quot;)
+    public Comment getById(Long id) {
+<span class="nc" id="L65">        return commentRepository.findByIdWithRelations(id)</span>
+<span class="nc" id="L66">                .orElseThrow(() -&gt; new NullException(&quot;Comment not found&quot;));</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Comment&gt; getAll(Pageable pageable) {
+<span class="fc" id="L71">        return commentRepository.findAll(pageable);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Comment&gt; search(String content, String author, Pageable pageable) {
+<span class="nc bnc" id="L76" title="All 4 branches missed.">        if (content != null &amp;&amp; !content.isBlank()) {</span>
+<span class="nc" id="L77">            return commentRepository.findByContentContainingIgnoreCase(content, pageable);</span>
+        }
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        if (author != null &amp;&amp; !author.isBlank()) {</span>
+<span class="nc" id="L80">            return commentRepository.findByAuthorUsernameContainingIgnoreCase(author, pageable);</span>
+        }
+<span class="nc" id="L82">        throw new IllegalArgumentException(&quot;Please provide at least one search parameter: content or author&quot;);</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;comments&quot;)
+    public Page&lt;Comment&gt; getAll(int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L88">        return getAll(PageableUtils.create(page, size, sortBy, ascending));</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;comments&quot;)
+    public Page&lt;Comment&gt; search(String content, String author, int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L94">        return search(content, author, PageableUtils.create(page, size, sortBy, ascending));</span>
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = &quot;comments&quot;)
+    public Page&lt;Comment&gt; searchOptional(String content, String author, int page, int size, String sortBy, boolean ascending) {
+<span class="nc" id="L100">        Pageable pageable = PageableUtils.create(page, size, sortBy, ascending);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">        if (content != null &amp;&amp; !content.isBlank()) {</span>
+<span class="nc" id="L102">            return commentRepository.findByContentContainingIgnoreCase(content, pageable);</span>
+        }
+<span class="nc bnc" id="L104" title="All 4 branches missed.">        if (author != null &amp;&amp; !author.isBlank()) {</span>
+<span class="nc" id="L105">            return commentRepository.findByAuthorUsernameContainingIgnoreCase(author, pageable);</span>
+        }
+<span class="nc" id="L107">        return Page.empty(pageable);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
