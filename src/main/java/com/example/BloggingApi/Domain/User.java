@@ -45,7 +45,7 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = "General";
+        this.role = "AUTHOR";
         this.createdAt = LocalDateTime.now();
     }
 

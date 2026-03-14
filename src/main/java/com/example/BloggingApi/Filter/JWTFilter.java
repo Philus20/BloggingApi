@@ -59,20 +59,33 @@ public class JWTFilter extends OncePerRequestFilter {
                 username = jwtService.extractUsername(token);
             } catch (ExpiredJwtException e) {
                 securityEventService.logTokenRejected(null, "Token expired");
-                log.warn("JWT rejected: token expired");
+                log.warn("JWT rejected: token expired - {}", e.getMessage());
                 sendUnauthorized(response, "Token expired");
                 return;
-            } catch (SignatureException e) {
+            } catch (io.jsonwebtoken.security.SignatureException e) {
                 securityEventService.logTokenRejected(null, "Invalid signature");
-                log.warn("JWT rejected: invalid signature");
+                log.warn("JWT rejected: invalid signature - {}", e.getMessage());
                 sendUnauthorized(response, "Invalid token signature");
                 return;
+            } catch (io.jsonwebtoken.MalformedJwtException e) {
+                securityEventService.logTokenRejected(null, "Malformed token");
+                log.warn("JWT rejected: malformed token - {}", e.getMessage());
+                sendUnauthorized(response, "Malformed token");
+                return;
             } catch (JwtException e) {
-                securityEventService.logTokenRejected(null, "Invalid token");
-                log.warn("JWT rejected: {}", e.getMessage());
+                securityEventService.logTokenRejected(null, "Invalid token: " + e.getClass().getSimpleName());
+                log.warn("JWT rejected: {} - {}", e.getClass().getSimpleName(), e.getMessage());
                 sendUnauthorized(response, "Invalid token");
                 return;
+            } catch (Exception e) {
+                securityEventService.logTokenRejected(null, "Token extraction failed");
+                log.error("JWT extraction error: {}", e.getMessage(), e);
+                sendUnauthorized(response, "Token processing failed");
+                return;
             }
+        } else {
+            filterChain.doFilter(request, response);
+            return;
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -84,16 +97,23 @@ public class JWTFilter extends OncePerRequestFilter {
                     sendUnauthorized(response, "Token has been revoked");
                     return;
                 }
-                UserDetails userDetails = context.getBean(CustomUserDetailsService.class).loadUserByUsername(username);
+                UserDetails userDetails = context.getBean("customUserDetailsService", CustomUserDetailsService.class).loadUserByUsername(username);
                 if (jwtService.validateToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.debug("Successfully authenticated user: {}", username);
+                } else {
+                    securityEventService.logTokenRejected(username, "Token validation failed");
+                    log.warn("JWT rejected: validation failed for user={}", username);
+                    sendUnauthorized(response, "Invalid or expired token");
+                    return;
                 }
             } catch (Exception e) {
-                securityEventService.logTokenRejected(username, e.getMessage());
-                sendUnauthorized(response, "Invalid or expired token");
+                securityEventService.logTokenRejected(username, "Authentication failed: " + e.getMessage());
+                log.error("Authentication error for user={}: {}", username, e.getMessage());
+                sendUnauthorized(response, "Authentication failed");
                 return;
             }
         }

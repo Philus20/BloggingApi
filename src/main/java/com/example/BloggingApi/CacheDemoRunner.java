@@ -5,6 +5,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Component
 @Profile("dev")
 public class CacheDemoRunner implements CommandLineRunner {
@@ -17,14 +19,16 @@ public class CacheDemoRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Long userId = 8L; // use an existing user ID
+//        Long userId = 8L; // use an existing user ID
+//
+//        System.out.println("First call:");
+//        userService.getById(userId);
+//
+//        System.out.println("Second call:");
+//        userService.getById(userId); // should NOT hit DB, nothing printed
+//
+//        System.out.println("Done demo.");
 
-        System.out.println("First call:");
-        userService.getById(userId);
-
-        System.out.println("Second call:");
-        userService.getById(userId); // should NOT hit DB, nothing printed
-
-        System.out.println("Done demo.");
+//        System.out.println(new Date());
     }
 }

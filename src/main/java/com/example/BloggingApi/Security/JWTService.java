@@ -2,8 +2,11 @@ package com.example.BloggingApi.Security;
 
 import com.example.BloggingApi.Domain.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -16,10 +19,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-// JWT signing and validation (HMAC SHA-256)
 @Service
 public class JWTService {
 
+    private static final Logger log = LoggerFactory.getLogger(JWTService.class);
     private static final int HMAC_SHA256_MIN_BYTES = 32;
 
     @Value("${app.jwt.secret:defaultsecret}")
@@ -37,6 +40,8 @@ public class JWTService {
         Date now = new Date();
         Date expiry = new Date(System.currentTimeMillis() + expirationMs);
 
+        log.debug("Generating token - Now: {}, Expiry: {}", now, expiry);
+        
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getUsername())
@@ -48,17 +53,27 @@ public class JWTService {
     }
 
     public String extractJti(String token) {
-        Object jti = extractAllClaims(token).get("jti");
-        return jti instanceof String s ? s : null;
+        return extractClaim(token, Claims::getId);
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        try {
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (Exception e) {
+            log.warn("Token validation failed: {}", e.getMessage());
+            return false;
+        }
     }
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            Date expiration = extractExpiration(token);
+            return expiration.before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expired: {}", e.getMessage());
+            return true;
+        }
     }
 
     public String extractUsername(String token) {
@@ -70,7 +85,7 @@ public class JWTService {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        Claims claims = extractAllClaims(token);
+        Claims claims = extractAllClaimsWithValidation(token);
         return resolver.apply(claims);
     }
 
@@ -82,8 +97,21 @@ public class JWTService {
                 .getPayload();
     }
 
+    private Claims extractAllClaimsWithValidation(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        String key = secret;
+        if (key != null && key.startsWith(" ")) {
+            key = key.trim();
+            log.debug("JWT secret had leading whitespace - trimmed");
+        }
+        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < HMAC_SHA256_MIN_BYTES) {
             throw new IllegalStateException("JWT secret must be at least 32 bytes for HMAC SHA-256");
         }
